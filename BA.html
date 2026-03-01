@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Rainbow Six 3 Match Stats</title>
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/3.4.0/css/fixedHeader.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.min.css">
+
+<style>
+/* ===============================
+   BASE TABLE
+   =============================== */
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
+
+table.dataTable {
+  width: 100% !important;
+}
+/* Player header inline layout */
+#dataTable thead th.player-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+/* Player filter dropdown */
+#dataTable thead th.player-header select {
+  font-size: 12px;
+  max-width: 120px;
+}
+/* ===============================
+   HEADER + SORTING
+   =============================== */
+
+/* Remove DataTables default arrows */
+#dataTable thead th.sorting,
+#dataTable thead th.sorting_asc,
+#dataTable thead th.sorting_desc {
+  background-image: none !important;
+  padding-right: 26px !important;
+  position: relative;
+}
+
+/* Custom inline sort arrows */
+#dataTable thead th.sorting::after {
+  content: "⇅";
+  font-size: 11px;
+  opacity: 0.4;
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#dataTable thead th.sorting_asc::after {
+  content: "▲";
+  font-size: 10px;
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#dataTable thead th.sorting_desc::after {
+  content: "▼";
+  font-size: 10px;
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* ===============================
+   ACTIVE SORT COLUMN HIGHLIGHT
+   =============================== */
+
+/* Header highlight */
+#dataTable thead th.sorting_asc,
+#dataTable thead th.sorting_desc {
+  background-color: #eef3ff;
+  font-weight: bold;
+}
+
+/* Cell highlight */
+#dataTable tbody td.sorted {
+  background-color: #f4f7ff;
+}
+
+/* ===============================
+   FILTER ROW
+   =============================== */
+.column-filter {
+  width: 100%;
+  font-size: 12px;
+  padding-right: 22px;
+}
+
+/* Excel-style funnel icon (Player filter only) */
+#dataTable thead tr.header-filters th:first-child {
+  position: relative;
+}
+
+#dataTable thead tr.header-filters th:first-child::after {
+  content: "";
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  opacity: 0.6;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>\
+<path fill='%23666' d='M3 4h18l-7 8v6l-4 2v-8z'/>\
+</svg>");
+}
+
+/* Prevent sorting from filter row */
+#dataTable thead tr.header-filters th {
+  pointer-events: none;
+}
+
+/* ===============================
+   COLUMN WIDTH + NO WRAP
+   =============================== */
+#dataTable th,
+#dataTable td {
+  min-width: 140px;
+  white-space: nowrap;
+}
+</style>
+</head>
+
+<body>
+<h2>Rainbow Six 3: Black Arrow Stats</h2>
+<div style="margin-bottom: 10px;">
+  <a href="index.html"><button>Old Bow Stats</button></a>
+  <a href="BA.html"><button>Black Arrow Stats</button></a>
+</div>
+
+<div style="margin-bottom: 10px;">
+  <button id="clearFilters">Clear Filters</button>
+</div>
+
+<table id="dataTable" class="display" style="width:100%">
+  <thead>
+    <tr class="header-titles"></tr>
+    <tr class="header-filters"></tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/fixedheader/3.4.0/js/dataTables.fixedHeader.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
+
+<script>
+fetch("R63 Data.xlsx")
+  .then(res => res.arrayBuffer())
+  .then(data => {
+    const workbook = XLSX.read(data, { type: "array" });
+    const sheetName = "BA";
+    const sheet = workbook.Sheets[sheetName];
+    const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+    const headers = json[0];
+    const rows = json.slice(1);
+
+    headers.forEach(h => {
+      document.querySelector(".header-titles").insertAdjacentHTML("beforeend", `<th>${h}</th>`);
+      document.querySelector(".header-filters").insertAdjacentHTML("beforeend", "<th></th>");
+    });
+
+    $('#dataTable').DataTable({
+      data: rows,
+columns: headers.map(h => {
+
+  const cleanHeader = h.replace(/\s+/g, " ").trim();
+
+  // Avg. Kills → integer
+  if (cleanHeader.toLowerCase() === "avg. kills") {
+    return {
+      render: function (data, type) {
+        const num = Number(data);
+        if (type === "display" || type === "filter") {
+          return isNaN(num) ? "" : Math.round(num);
+        }
+        return num;
+      }
+    };
+  }
+
+  // 🔥 AUTO-DETECT percentage columns
+  if (
+    cleanHeader.includes("%") ||
+    cleanHeader.toLowerCase().includes("rate") ||
+    cleanHeader.toLowerCase().includes("accuracy")
+  ) {
+    return {
+      render: function (data, type) {
+        const num = Number(data);
+
+        if (type === "display" || type === "filter") {
+          if (isNaN(num)) return "";
+
+          // If value is 0–1, treat as decimal percent
+          if (num <= 1) {
+            return Math.round(num * 100) + "%";
+          }
+
+          // Otherwise treat as already percent
+          return Math.round(num) + "%";
+        }
+
+        return num; // numeric sorting
+      }
+    };
+  }
+
+  // Default column
+  return null;
+}),
+      scrollY: "70vh",
+      scrollCollapse: true,
+      paging: false,
+scrollX: true,
+scrollY: "70vh",
+paging: false,
+autoWidth: false,
+orderCellsTop: true,
+
+fixedHeader: true,
+
+fixedColumns: {
+  left: 1   // ✅ FREEZE Player column (header + body)
+},
+
+columnDefs: [
+  { targets: 0, width: 160 }
+],
+autoWidth: false,
+      initComplete: function () {
+        const api = this.api();
+
+        // Clear all filters button
+$("#clearFilters").on("click", function () {
+  api.search("").columns().search("").draw();
+
+  // Reset Player dropdown UI
+  $(".column-filter").val("");
+});
+
+        api.columns().every(function (colIdx) {
+          if (headers[colIdx] !== "Player") return;
+
+          const column = this;
+          const cell = document.querySelectorAll(".header-filters th")[colIdx];
+
+          const select = document.createElement("select");
+          select.className = "column-filter";
+          select.innerHTML = "<option value=''>All</option>";
+
+          select.addEventListener("change", function () {
+            const val = $.fn.dataTable.util.escapeRegex(this.value);
+            column.search(val ? "^" + val + "$" : "", true, false).draw();
+          });
+
+          column.data().unique().sort().each(d => {
+            if (d) select.insertAdjacentHTML("beforeend", `<option value="${d}">${d}</option>`);
+          });
+
+          cell.appendChild(select);
+          const api = this.api();
+
+setTimeout(() => {
+  api.columns.adjust();
+}, 0);
+        });
+      }
+    });
+  });
+</script>
+</body>
+</html>

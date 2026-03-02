@@ -6,81 +6,198 @@
 
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/3.4.0/css/fixedHeader.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.min.css">
 
 <style>
-body { font-family: Arial, sans-serif; margin: 20px; }
+/* ===============================
+   BASE TABLE
+   =============================== */
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
+
 table.dataTable {
   width: 100% !important;
 }
-/* ===============================
-   INLINE SORT ICONS — FIXEDHEADER
-   =============================== */
-
-/* Disable DataTables default background arrows */
-#dataTable thead tr.header-titles th.sorting,
-#dataTable thead tr.header-titles th.sorting_asc,
-#dataTable thead tr.header-titles th.sorting_desc,
-table.fixedHeader-floating thead tr.header-titles th.sorting,
-table.fixedHeader-floating thead tr.header-titles th.sorting_asc,
-table.fixedHeader-floating thead tr.header-titles th.sorting_desc {
-  background-image: none !important;
+/* Player header inline layout */
+#dataTable thead th.player-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
 
-/* Custom inline arrows */
-#dataTable thead tr.header-titles th.sorting::after,
-table.fixedHeader-floating thead tr.header-titles th.sorting::after {
+/* Player filter dropdown */
+#dataTable thead th.player-header select {
+  font-size: 12px;
+  max-width: 120px;
+}
+/* ===============================
+   HEADER + SORTING
+   =============================== */
+
+/* Remove DataTables default arrows */
+#dataTable thead th.sorting,
+#dataTable thead th.sorting_asc,
+#dataTable thead th.sorting_desc {
+  background-image: none !important;
+  padding-right: 26px !important;
+  position: relative;
+}
+
+/* Custom inline sort arrows */
+#dataTable thead th.sorting::after {
   content: "⇅";
   font-size: 11px;
   opacity: 0.4;
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
-#dataTable thead tr.header-titles th.sorting_asc::after,
-table.fixedHeader-floating thead tr.header-titles th.sorting_asc::after {
+#dataTable thead th.sorting_asc::after {
   content: "▲";
   font-size: 10px;
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
-#dataTable thead tr.header-titles th.sorting_desc::after,
-table.fixedHeader-floating thead tr.header-titles th.sorting_desc::after {
+#dataTable thead th.sorting_desc::after {
   content: "▼";
   font-size: 10px;
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
 }
+
+/* ===============================
+   ACTIVE SORT COLUMN HIGHLIGHT
+   =============================== */
+
+/* Header highlight */
+#dataTable thead th.sorting_asc,
+#dataTable thead th.sorting_desc {
+  background-color: #eef3ff;
+  font-weight: bold;
+}
+
+/* Cell highlight */
+#dataTable tbody td.sorted {
+  background-color: #f4f7ff;
+}
+
+/* ===============================
+   FILTER ROW
+   =============================== */
 .column-filter {
   width: 100%;
   font-size: 12px;
+  padding-right: 22px;
 }
 
+/* Excel-style funnel icon (Player filter only) */
+#dataTable thead tr.header-filters th:first-child {
+  position: relative;
+}
+
+#dataTable thead tr.header-filters th:first-child::after {
+  content: "";
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  opacity: 0.6;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>\
+<path fill='%23666' d='M3 4h18l-7 8v6l-4 2v-8z'/>\
+</svg>");
+}
+
+/* Prevent sorting from filter row */
+#dataTable thead tr.header-filters th {
+  pointer-events: none;
+}
+
+/* ===============================
+   COLUMN WIDTH + NO WRAP
+   =============================== */
 #dataTable th,
 #dataTable td {
   min-width: 140px;
   white-space: nowrap;
 }
-/* FORCE DataTables sort icons to align with header text */
-#dataTable thead th.sorting,
-#dataTable thead th.sorting_asc,
-#dataTable thead th.sorting_desc,
-table.fixedHeader-floating thead th.sorting,
-table.fixedHeader-floating thead th.sorting_asc,
-table.fixedHeader-floating thead th.sorting_desc {
-  background-position: right center !important;
-  padding-right: 22px !important;
-}
+/* ===============================
+   CENTER HEADERS & DATA
+   =============================== */
 
-/* Reduce header row height so arrows don't drift downward */
+/* Center all header text */
 #dataTable thead th {
-  line-height: 1.2;
+  text-align: center;
   vertical-align: middle;
 }
 
+/* Center all table data */
+#dataTable tbody td {
+  text-align: center;
+}
+
+/* Keep Player column slightly emphasized */
+#dataTable tbody td:first-child,
+#dataTable thead th:first-child {
+  text-align: center;
+  font-weight: bold;
+}
+
+/* Zebra striping — FORCE all columns including FixedColumns */
+#dataTable tbody tr:nth-child(odd) td,
+.dtfc-fixed-left tbody tr:nth-child(odd) td {
+  background-color: #ffffff !important;
+}
+
+#dataTable tbody tr:nth-child(even) td,
+.dtfc-fixed-left tbody tr:nth-child(even) td {
+  background-color: #f2f2f2 !important; /* Excel gray */
+}
+
+/* Hover */
+#dataTable tbody tr:hover td,
+.dtfc-fixed-left tbody tr:hover td {
+  background-color: #e9f1ff !important;
+}
+/* Inline Player header + filter */
+.header-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* Player filter dropdown */
+.player-filter {
+  font-size: 12px;
+  padding: 2px 4px;
+}
 </style>
 </head>
 
 <body>
-<h2>Rainbow Six 3 Old Bow Stats</h2>
+<h2>Rainbow Six 3: Old Bow Stats</h2>
 <div style="margin-bottom: 10px;">
- <a href="index.html"><button>Old Bow Stats</button></a>
+  <a href="index.html"><button>Old Bow Stats</button></a>
+  <a href="OB_MA.html"><button>Old Bow Match Analyzer</button></a>
   <a href="BA.html"><button>Black Arrow Stats</button></a>
+  <a href="BA_MA.html"><button>Black Arrow Match Analyzer</button></a>
 </div>
+
 <div style="margin-bottom: 10px;">
   <button id="clearFilters">Clear Filters</button>
 </div>
@@ -97,33 +214,42 @@ table.fixedHeader-floating thead th.sorting_desc {
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/fixedheader/3.4.0/js/dataTables.fixedHeader.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
 
 <script>
 fetch("R63 Data.xlsx")
   .then(res => res.arrayBuffer())
   .then(data => {
     const workbook = XLSX.read(data, { type: "array" });
-    const sheetName = workbook.SheetNames[0];
+    const sheetName = "Old Bow";
     const sheet = workbook.Sheets[sheetName];
     const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
     const headers = json[0];
     const rows = json.slice(1);
-
+// 🔒 Normalize rows so all rows match header length
+const normalizedRows = rows.map(r => {
+  const row = r.slice(0, headers.length);
+  while (row.length < headers.length) {
+    row.push("");
+  }
+  return row;
+});
     headers.forEach(h => {
       document.querySelector(".header-titles").insertAdjacentHTML("beforeend", `<th>${h}</th>`);
       document.querySelector(".header-filters").insertAdjacentHTML("beforeend", "<th></th>");
     });
 
     $('#dataTable').DataTable({
-      data: rows,
-columns: headers.map(h => {
-
-  const cleanHeader = h.replace(/\s+/g, " ").trim();
+    data: normalizedRows,
+columns: headers.map((h, i) => {
+  const cleanHeader = h.replace(/\s+/g, " ").trim().toLowerCase();
 
   // Avg. Kills → integer
-  if (cleanHeader.toLowerCase() === "avg. kills") {
+  if (cleanHeader === "avg. kills") {
     return {
+      data: i,
+      defaultContent: "",
       render: function (data, type) {
         const num = Number(data);
         if (type === "display" || type === "filter") {
@@ -134,47 +260,54 @@ columns: headers.map(h => {
     };
   }
 
-  // 🔥 AUTO-DETECT percentage columns
+  // Percent columns
   if (
-    cleanHeader.includes("%") ||
-    cleanHeader.toLowerCase().includes("rate") ||
-    cleanHeader.toLowerCase().includes("accuracy")
+    h.includes("%") ||
+    cleanHeader.includes("rate") ||
+    cleanHeader.includes("accuracy")
   ) {
     return {
+      data: i,
+      defaultContent: "",
       render: function (data, type) {
         const num = Number(data);
-
         if (type === "display" || type === "filter") {
           if (isNaN(num)) return "";
-
-          // If value is 0–1, treat as decimal percent
-          if (num <= 1) {
-            return Math.round(num * 100) + "%";
-          }
-
-          // Otherwise treat as already percent
-          return Math.round(num) + "%";
+          return num <= 1
+            ? Math.round(num * 100) + "%"
+            : Math.round(num) + "%";
         }
-
-        return num; // numeric sorting
+        return num;
       }
     };
   }
 
-  // Default column
-  return null;
+  // ✅ DEFAULT SAFE COLUMN
+  return {
+    data: i,
+    defaultContent: ""
+  };
 }),
       scrollY: "70vh",
       scrollCollapse: true,
       paging: false,
-     fixedHeader: {
-  header: true,
-  footer: false
-},
 scrollX: true,
-orderCellsTop: true,
+scrollY: "70vh",
+paging: false,
 autoWidth: false,
-      initComplete: function () {
+orderCellsTop: true,
+
+fixedHeader: true,
+
+fixedColumns: {
+  left: 1   // ✅ FREEZE Player column (header + body)
+},
+
+columnDefs: [
+  { targets: 0, width: 160 }
+],
+autoWidth: false,
+initComplete: function () {
         const api = this.api();
 
         // Clear all filters button

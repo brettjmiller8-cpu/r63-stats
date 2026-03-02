@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>R63: BA Team Strength Analyzer</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f8f9fa; color: #2c3e50; }
+  .header-box { background: #2c3e50; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+  
+  .container { display: flex; flex-direction: column; gap: 30px; max-width: 1200px; margin: 0 auto; }
+  
+  .team-section { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 10px solid #ccc; }
+  .green-border { border-left-color: #27ae60; }
+  .red-border { border-left-color: #e74c3c; }
+  
+  h3 { margin-top: 0; display: flex; justify-content: space-between; align-items: center; }
+  
+  table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85rem; }
+  th { background: #f1f3f5; padding: 10px; border: 1px solid #dee2e6; text-align: center; }
+  td { padding: 8px; border: 1px solid #dee2e6; text-align: center; }
+  .tfoot { font-weight: bold; background: #f8f9fa; }
+  
+  select { width: 100%; padding: 6px; border-radius: 4px; border: 1px solid #ced4da; }
+  
+  /* Heatmap Styles */
+  .heatmap-container { margin-top: 20px; overflow-x: auto; padding-bottom: 10px; }
+  .map-grid { display: flex; gap: 4px; min-width: 1000px; }
+  .map-cell { flex: 1; padding: 10px 5px; border-radius: 4px; text-align: center; font-size: 11px; border: 1px solid #eee; transition: background 0.3s; }
+  .map-name { font-weight: bold; display: block; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .map-val { font-size: 1.1em; }
+
+  .top-maps { margin-top: 15px; display: flex; gap: 10px; align-items: center; }
+  .badge { padding: 5px 12px; border-radius: 20px; background: #e9ecef; font-weight: bold; font-size: 0.85em; }
+  .badge-green { background: #d4edda; color: #155724; }
+  .badge-red { background: #f8d7da; color: #721c24; }
+
+  #clearBtn { background: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+  #clearBtn:hover { background: #c0392b; }
+</style>
+</head>
+<body>
+
+<div class="header-box">
+  <div>
+    <h2 style="margin:0;">🎖️ R63: Black Arrow Match Analyzer</h2>
+  </div>
+  <button id="clearBtn">🗑 Clear Roster</button>
+</div>
+<div style="margin-bottom: 10px;">
+  <a href="index.html"><button>Old Bow Stats</button></a>
+  <a href="OB_MA.html"><button>Old Bow Match Analyzer</button></a>
+  <a href="BA.html"><button>Black Arrow Stats</button></a>
+  <a href="BA_MA.html"><button>Black Arrow Match Analyzer</button></a>
+</div>
+
+<div class="container">
+  <div class="team-section green-border">
+    <h3><span style="color:#27ae60">🟢 GREEN TEAM</span> <span id="greenAvg" style="font-size: 0.7em; color: #7f8c8d;"></span></h3>
+    <table id="greenTable">
+      <thead>
+        <tr>
+          <th style="width: 200px;">Player</th>
+          <th>Kills</th><th>Avg Kills</th><th>Match %</th><th>Map %</th><th>Round %</th><th>Total Map Wins</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+      <tfoot class="tfoot">
+        <tr><td>TEAM TOTALS</td><td class="sumKills">0</td><td class="avgKills">0</td><td class="avgMatch">0%</td><td class="avgMap">0%</td><td class="avgRound">0%</td><td class="sumWins">0</td></tr>
+      </tfoot>
+    </table>
+    
+    <div class="top-maps" id="greenTopMaps">
+      <strong>Top 3 Strengths:</strong> <span>Select players to calculate...</span>
+    </div>
+
+    <div class="heatmap-container">
+      <div class="map-grid" id="greenHeatmap"></div>
+    </div>
+  </div>
+
+  <div class="team-section red-border">
+    <h3><span style="color:#e74c3c">🔴 RED TEAM</span> <span id="redAvg" style="font-size: 0.7em; color: #7f8c8d;"></span></h3>
+    <table id="redTable">
+      <thead>
+        <tr>
+          <th style="width: 200px;">Player</th>
+          <th>Kills</th><th>Avg Kills</th><th>Match %</th><th>Map %</th><th>Round %</th><th>Total Map Wins</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+      <tfoot class="tfoot">
+        <tr><td>TEAM TOTALS</td><td class="sumKills">0</td><td class="avgKills">0</td><td class="avgMatch">0%</td><td class="avgMap">0%</td><td class="avgRound">0%</td><td class="sumWins">0</td></tr>
+      </tfoot>
+    </table>
+
+    <div class="top-maps" id="redTopMaps">
+      <strong>Top 3 Strengths:</strong> <span>Select players to calculate...</span>
+    </div>
+
+    <div class="heatmap-container">
+      <div class="map-grid" id="redHeatmap"></div>
+    </div>
+  </div>
+</div>
+<div id="comparisonSummary" style="max-width: 1200px; margin: 20px auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; display: none;">
+  <h3 style="margin-bottom: 10px;">📊 Statistical Advantage Summary</h3>
+  <div style="display: flex; justify-content: center; gap: 50px; font-size: 1.2rem; font-weight: bold;">
+    <div id="greenWins" style="color: #27ae60;">🟢 Green Team: 0</div>
+    <div id="redWins" style="color: #e74c3c;">🔴 Red Team: 0</div>
+  </div>
+  <div id="leadText" style="margin-top: 10px; font-style: italic; color: #7f8c8d;">Select players to see who holds the advantage.</div>
+</div>
+<script>
+let PLAYER_DATA = [];
+const MAP_COLUMNS = ['Agora','Airport 1','Back Alleys','Café','Castle','Ferry Boat','Garage','Harbor Warehouse','Kesba','Military Base','Nuclear Reactor','Observatory','Office Complex','Old Ruins','Presidio','Pumping Station','Rocket Facility','Streets of Milan','Subway','Village'];
+
+fetch("R63 Data.xlsx").then(res => res.arrayBuffer()).then(buffer => {
+  const wb = XLSX.read(buffer, { type: "array" });
+  const sheet = wb.Sheets["BA"]; 
+  const data = XLSX.utils.sheet_to_json(sheet);
+  
+  PLAYER_DATA = data.map(d => {
+    let mapWins = {};
+    MAP_COLUMNS.forEach(m => { mapWins[m] = Number(d[m]) || 0; });
+    return {
+      Player: d["Player"],
+      Kills: d["Kills"],
+      AvgKills: d["Avg. Kills"],
+      MatchPct: d["Match %"],
+      MapWins: d["Map Wins"],
+      MapPct: d["Map %"],
+      RoundPct: d["Round %"],
+      MapSpecificWins: mapWins
+    };
+  }).filter(d => d.Player);
+
+  const names = PLAYER_DATA.map(d => d.Player).sort();
+  ["greenTable", "redTable"].forEach(id => {
+    setupTable(id, names);
+    renderMapGrid(id.replace('Table', 'Heatmap'));
+  });
+
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    document.querySelectorAll("select").forEach(s => s.value = "");
+    updateTeam("greenTable");
+    updateTeam("redTable");
+    compareTeams();
+  });
+});
+
+function setupTable(id, names) {
+  const tbody = document.querySelector(`#${id} tbody`);
+  for (let i = 0; i < 8; i++) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td><select class="p-sel"><option value="">Select Player</option>${names.map(p => `<option value="${p}">${p}</option>`).join("")}</select></td>
+      <td class="kills">-</td><td class="avgk">-</td><td class="m-pct">-</td><td class="map-pct">-</td><td class="r-pct">-</td><td class="mwins">-</td>`;
+    
+    // Trigger update for BOTH teams whenever ONE changes to ensure comparison is fresh
+    tr.querySelector("select").addEventListener("change", () => {
+        updateTeam("greenTable");
+        updateTeam("redTable");
+        compareTeams();
+    });
+    tbody.appendChild(tr);
+  }
+}
+
+function renderMapGrid(containerId) {
+  const container = document.getElementById(containerId);
+  MAP_COLUMNS.forEach(map => {
+    const div = document.createElement("div");
+    div.className = "map-cell";
+    div.id = `${containerId}-${map.replace(/\s/g, '')}`;
+    div.innerHTML = `<span class="map-name">${map}</span><span class="map-val">0</span>`;
+    container.appendChild(div);
+  });
+}
+
+function updateTeam(tableId) {
+  const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+  let totals = { kills:0, avgk:0, m_pct:0, map_pct:0, r_pct:0, mwins:0, count:0 };
+  let teamMaps = {};
+  MAP_COLUMNS.forEach(m => teamMaps[m] = 0);
+
+  rows.forEach(tr => {
+    const stats = PLAYER_DATA.find(d => d.Player === tr.querySelector("select").value);
+    if (stats) {
+      tr.querySelector(".kills").textContent = stats.Kills;
+      tr.querySelector(".avgk").textContent = Number(stats.AvgKills).toFixed(1);
+      tr.querySelector(".m-pct").textContent = formatPct(stats.MatchPct);
+      tr.querySelector(".map-pct").textContent = formatPct(stats.MapPct);
+      tr.querySelector(".r-pct").textContent = formatPct(stats.RoundPct);
+      tr.querySelector(".mwins").textContent = stats.MapWins;
+
+      totals.kills += Number(stats.Kills);
+      totals.avgk += Number(stats.AvgKills);
+      totals.m_pct += (stats.MatchPct <= 1 ? stats.MatchPct * 100 : stats.MatchPct);
+      totals.map_pct += (stats.MapPct <= 1 ? stats.MapPct * 100 : stats.MapPct);
+      totals.r_pct += (stats.RoundPct <= 1 ? stats.RoundPct * 100 : stats.RoundPct);
+      totals.mwins += Number(stats.MapWins);
+      totals.count++;
+
+      MAP_COLUMNS.forEach(m => teamMaps[m] += stats.MapSpecificWins[m]);
+    } else {
+      tr.querySelectorAll("td:not(:first-child)").forEach(td => td.textContent = "-");
+    }
+  });
+
+  const f = document.querySelector(`#${tableId} tfoot`);
+  f.querySelector(".sumKills").textContent = totals.kills;
+  f.querySelector(".avgKills").textContent = totals.count ? (totals.avgk / totals.count).toFixed(1) : 0;
+  f.querySelector(".avgMatch").textContent = totals.count ? Math.round(totals.m_pct / totals.count) + "%" : "0%";
+  f.querySelector(".avgMap").textContent = totals.count ? Math.round(totals.map_pct / totals.count) + "%" : "0%";
+  f.querySelector(".avgRound").textContent = totals.count ? Math.round(totals.r_pct / totals.count) + "%" : "0%";
+  f.querySelector(".sumWins").textContent = totals.mwins;
+
+  updateHeatmap(tableId.replace('Table', 'Heatmap'), teamMaps);
+}
+
+// ... (previous PLAYER_DATA and fetch code remains the same)
+
+function compareTeams() {
+    const categories = [
+        { class: ".avgKills", label: "Avg Kills" },
+        { class: ".avgMatch", label: "Match %" },
+        { class: ".avgMap", label: "Map %" },
+        { class: ".avgRound", label: "Round %" }
+    ];
+
+    let gWins = 0;
+    let rWins = 0;
+
+    categories.forEach(cat => {
+        const greenEl = document.querySelector(`#greenTable tfoot ${cat.class}`);
+        const redEl = document.querySelector(`#redTable tfoot ${cat.class}`);
+        
+        const greenVal = parseFloat(greenEl.textContent) || 0;
+        const redVal = parseFloat(redEl.textContent) || 0;
+
+        // Reset styles
+        greenEl.style.color = ""; greenEl.style.fontSize = "1rem";
+        redEl.style.color = ""; redEl.style.fontSize = "1rem";
+
+        if (greenVal > 0 || redVal > 0) {
+            if (greenVal > redVal) {
+                greenEl.style.color = "#27ae60"; 
+                greenEl.style.fontSize = "1.1rem";
+                gWins++;
+            } else if (redVal > greenVal) {
+                redEl.style.color = "#e74c3c";
+                redEl.style.fontSize = "1.1rem";
+                rWins++;
+            }
+        }
+    });
+
+    // Update the Summary Box
+    const summaryBox = document.getElementById("comparisonSummary");
+    const greenWinsEl = document.getElementById("greenWins");
+    const redWinsEl = document.getElementById("redWins");
+    const leadTextEl = document.getElementById("leadText");
+
+    if (gWins > 0 || rWins > 0) {
+        summaryBox.style.display = "block";
+        greenWinsEl.textContent = `🟢 Green Team: ${gWins} Categories`;
+        redWinsEl.textContent = `🔴 Red Team: ${rWins} Categories`;
+        
+        if (gWins > rWins) {
+            leadTextEl.textContent = `Green Team leads the statistical matchup ${gWins} to ${rWins}.`;
+        } else if (rWins > gWins) {
+            leadTextEl.textContent = `Red Team leads the statistical matchup ${rWins} to ${gWins}.`;
+        } else {
+            leadTextEl.textContent = `The teams are currently tied in statistical advantages!`;
+        }
+    } else {
+        summaryBox.style.display = "none";
+    }
+}
+
+// Ensure updateTeam and clearBtn calls compareTeams()
+document.getElementById("clearBtn").addEventListener("click", () => {
+    document.querySelectorAll("select").forEach(s => s.value = "");
+    updateTeam("greenTable");
+    updateTeam("redTable");
+    compareTeams(); // Reset summary on clear
+});
+
+function updateHeatmap(containerId, teamMaps) {
+  const values = Object.values(teamMaps);
+  const maxVal = Math.max(...values, 1);
+  const isGreen = containerId.includes('green');
+  const baseColor = isGreen ? '39, 174, 96' : '231, 76, 60';
+
+  MAP_COLUMNS.forEach(map => {
+    const cell = document.getElementById(`${containerId}-${map.replace(/\s/g, '')}`);
+    const val = teamMaps[map];
+    const opacity = (val / maxVal) * 0.8; 
+    cell.style.background = val > 0 ? `rgba(${baseColor}, ${0.1 + opacity})` : '#fff';
+    cell.querySelector('.map-val').textContent = val;
+    cell.style.borderColor = val > 0 ? `rgba(${baseColor}, 0.5)` : '#eee';
+  });
+
+  const sorted = Object.entries(teamMaps).sort((a,b) => b[1] - a[1]).filter(x => x[1] > 0).slice(0, 3);
+  const badgeClass = isGreen ? 'badge badge-green' : 'badge badge-red';
+  const displayId = isGreen ? 'greenTopMaps' : 'redTopMaps';
+  
+  document.getElementById(displayId).innerHTML = `<strong>Top 3 Strengths:</strong> ` + 
+    (sorted.length ? sorted.map(s => `<span class="${badgeClass}">${s[0]} (${s[1]})</span>`).join(" ") : "<span>N/A</span>");
+}
+
+function formatPct(val) {
+  if (!val && val !== 0) return "-";
+  let n = parseFloat(val);
+  if (n <= 1) n *= 100;
+  return Math.round(n) + "%";
+}
+</script>
+</body>
+</html>

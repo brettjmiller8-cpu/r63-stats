@@ -20,24 +20,11 @@ body {
 table.dataTable {
   width: 100% !important;
 }
-/* Player header inline layout */
-#dataTable thead th.player-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-}
 
-/* Player filter dropdown */
-#dataTable thead th.player-header select {
-  font-size: 12px;
-  max-width: 120px;
-}
 /* ===============================
    HEADER + SORTING
-   =============================== */
+   ============================== */
 
-/* Remove DataTables default arrows */
 #dataTable thead th.sorting,
 #dataTable thead th.sorting_asc,
 #dataTable thead th.sorting_desc {
@@ -46,7 +33,6 @@ table.dataTable {
   position: relative;
 }
 
-/* Custom inline sort arrows */
 #dataTable thead th.sorting::after {
   content: "⇅";
   font-size: 11px;
@@ -75,10 +61,6 @@ table.dataTable {
   transform: translateY(-50%);
 }
 
-/* ===============================
-   ACTIVE SORT COLUMN HIGHLIGHT
-   =============================== */
-
 /* Header highlight */
 #dataTable thead th.sorting_asc,
 #dataTable thead th.sorting_desc {
@@ -97,29 +79,6 @@ table.dataTable {
 .column-filter {
   width: 100%;
   font-size: 12px;
-  padding-right: 22px;
-}
-
-/* Excel-style funnel icon (Player filter only) */
-#dataTable thead tr.header-filters th:first-child {
-  position: relative;
-}
-
-#dataTable thead tr.header-filters th:first-child::after {
-  content: "";
-  position: absolute;
-  right: 6px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 12px;
-  height: 12px;
-  opacity: 0.6;
-  background-repeat: no-repeat;
-  background-size: contain;
-  background-image: url("data:image/svg+xml;utf8,\
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>\
-<path fill='%23666' d='M3 4h18l-7 8v6l-4 2v-8z'/>\
-</svg>");
 }
 
 /* Prevent sorting from filter row */
@@ -132,29 +91,15 @@ table.dataTable {
    =============================== */
 #dataTable th,
 #dataTable td {
-  min-width: 140px;
+  min-width: 100px;
   white-space: nowrap;
-}
-/* ===============================
-   CENTER HEADERS & DATA
-   =============================== */
-
-/* Center all header text */
-#dataTable thead th {
-  text-align: center;
-  vertical-align: middle;
 }
 
 /* Center all table data */
+#dataTable thead th,
 #dataTable tbody td {
   text-align: center;
-}
-
-/* Keep Player column slightly emphasized */
-#dataTable tbody td:first-child,
-#dataTable thead th:first-child {
-  text-align: center;
-  font-weight: bold;
+  vertical-align: middle;
 }
 
 /* Zebra striping — FORCE all columns including FixedColumns */
@@ -165,7 +110,7 @@ table.dataTable {
 
 #dataTable tbody tr:nth-child(even) td,
 .dtfc-fixed-left tbody tr:nth-child(even) td {
-  background-color: #f2f2f2 !important; /* Excel gray */
+  background-color: #f2f2f2 !important;
 }
 
 /* Hover */
@@ -173,18 +118,13 @@ table.dataTable {
 .dtfc-fixed-left tbody tr:hover td {
   background-color: #e9f1ff !important;
 }
-/* Inline Player header + filter */
-.header-inline {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
 
-/* Player filter dropdown */
-.player-filter {
-  font-size: 12px;
-  padding: 2px 4px;
+/* The index column style */
+.index-column {
+  font-weight: normal !important;
+  color: #666;
+  width: 40px !important;
+  min-width: 40px !important;
 }
 </style>
 </head>
@@ -204,8 +144,12 @@ table.dataTable {
 
 <table id="dataTable" class="display" style="width:100%">
   <thead>
-    <tr class="header-titles"></tr>
-    <tr class="header-filters"></tr>
+    <tr class="header-titles">
+      <th class="index-column">#</th>
+    </tr>
+    <tr class="header-filters">
+      <th></th>
+    </tr>
   </thead>
   <tbody></tbody>
 </table>
@@ -227,106 +171,95 @@ fetch("R63 Data.xlsx")
 
     const headers = json[0];
     const rows = json.slice(1);
-// 🔒 Normalize rows so all rows match header length
-const normalizedRows = rows.map(r => {
-  const row = r.slice(0, headers.length);
-  while (row.length < headers.length) {
-    row.push("");
-  }
-  return row;
-});
+
+    const normalizedRows = rows.map(r => {
+      const row = r.slice(0, headers.length);
+      while (row.length < headers.length) {
+        row.push("");
+      }
+      return row;
+    });
+
+    // Populate Headers
     headers.forEach(h => {
       document.querySelector(".header-titles").insertAdjacentHTML("beforeend", `<th>${h}</th>`);
       document.querySelector(".header-filters").insertAdjacentHTML("beforeend", "<th></th>");
     });
 
-    $('#dataTable').DataTable({
-    data: normalizedRows,
-columns: headers.map((h, i) => {
-  const cleanHeader = h.replace(/\s+/g, " ").trim().toLowerCase();
+    const table = $('#dataTable').DataTable({
+      data: normalizedRows,
+      columns: [
+        { 
+          data: null, 
+          defaultContent: "", 
+          className: "index-column",
+          orderable: false,
+          searchable: false
+        },
+        ...headers.map((h, i) => {
+          const cleanHeader = h.replace(/\s+/g, " ").trim().toLowerCase();
 
-  // Avg. Kills → integer
-  if (cleanHeader === "avg. kills") {
-    return {
-      data: i,
-      defaultContent: "",
-      render: function (data, type) {
-        const num = Number(data);
-        if (type === "display" || type === "filter") {
-          return isNaN(num) ? "" : Math.round(num);
-        }
-        return num;
-      }
-    };
-  }
+          if (cleanHeader === "avg. kills") {
+            return {
+              data: i,
+              render: function (data, type) {
+                const num = Number(data);
+                if (type === "display" || type === "filter") {
+                  return isNaN(num) ? "" : Math.round(num);
+                }
+                return num;
+              }
+            };
+          }
 
-  // Percent columns
-  if (
-    h.includes("%") ||
-    cleanHeader.includes("rate") ||
-    cleanHeader.includes("accuracy")
-  ) {
-    return {
-      data: i,
-      defaultContent: "",
-      render: function (data, type) {
-        const num = Number(data);
-        if (type === "display" || type === "filter") {
-          if (isNaN(num)) return "";
-          return num <= 1
-            ? Math.round(num * 100) + "%"
-            : Math.round(num) + "%";
-        }
-        return num;
-      }
-    };
-  }
+          if (h.includes("%") || cleanHeader.includes("rate") || cleanHeader.includes("accuracy")) {
+            return {
+              data: i,
+              render: function (data, type) {
+                const num = Number(data);
+                if (type === "display" || type === "filter") {
+                  if (isNaN(num)) return "";
+                  return num <= 1 ? Math.round(num * 100) + "%" : Math.round(num) + "%";
+                }
+                return num;
+              }
+            };
+          }
 
-  // ✅ DEFAULT SAFE COLUMN
-  return {
-    data: i,
-    defaultContent: ""
-  };
-}),
+          return { data: i, defaultContent: "" };
+        })
+      ],
+      scrollX: true,
       scrollY: "70vh",
       scrollCollapse: true,
       paging: false,
-scrollX: true,
-scrollY: "70vh",
-paging: false,
-autoWidth: false,
-orderCellsTop: true,
-
-fixedHeader: true,
-
-fixedColumns: {
-  left: 1   // ✅ FREEZE Player column (header + body)
-},
-
-columnDefs: [
-  { targets: 0, width: 160 }
-],
-autoWidth: false,
-initComplete: function () {
+      autoWidth: false,
+      orderCellsTop: true,
+      fixedHeader: true,
+      fixedColumns: {
+        left: 2 // Freeze # and Player
+      },
+      columnDefs: [
+        { targets: 1, width: 160 } // Player column is now index 1
+      ],
+      initComplete: function () {
         const api = this.api();
 
-        // Clear all filters button
-$("#clearFilters").on("click", function () {
-  api.search("").columns().search("").draw();
-
-  // Reset Player dropdown UI
-  $(".column-filter").val("");
-});
+        $("#clearFilters").on("click", function () {
+          api.search("").columns().search("").draw();
+          $(".column-filter").val("");
+        });
 
         api.columns().every(function (colIdx) {
-          if (headers[colIdx] !== "Player") return;
+          // Adjust index: headers array doesn't have the '#' column, so colIdx 1 is headers[0]
+          if (colIdx === 0 || headers[colIdx - 1] !== "Player") return;
 
           const column = this;
           const cell = document.querySelectorAll(".header-filters th")[colIdx];
 
           const select = document.createElement("select");
           select.className = "column-filter";
-          select.innerHTML = "<option value=''>All</option>";
+          select.innerHTML = "<option value=''>All Players</option>";
 
           select.addEventListener("change", function () {
             const val = $.fn.dataTable.util.escapeRegex(this.value);
@@ -338,13 +271,20 @@ $("#clearFilters").on("click", function () {
           });
 
           cell.appendChild(select);
-          const api = this.api();
-
-setTimeout(() => {
-  api.columns.adjust();
-}, 0);
         });
       }
+    });
+
+    // Dynamic numbering logic
+    table.on('draw.dt', function () {
+      table.column(0, { search: 'applied', order: 'applied' }).nodes().each(function (cell, i) {
+        cell.innerHTML = i + 1;
+      });
+    }).draw();
+
+    // Fix column alignment on window resize
+    $(window).on('resize', function () {
+        table.columns.adjust();
     });
   });
 </script>

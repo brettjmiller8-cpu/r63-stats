@@ -20,24 +20,11 @@ body {
 table.dataTable {
   width: 100% !important;
 }
-/* Player header inline layout */
-#dataTable thead th.player-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-}
 
-/* Player filter dropdown */
-#dataTable thead th.player-header select {
-  font-size: 12px;
-  max-width: 120px;
-}
 /* ===============================
    HEADER + SORTING
    =============================== */
 
-/* Remove DataTables default arrows */
 #dataTable thead th.sorting,
 #dataTable thead th.sorting_asc,
 #dataTable thead th.sorting_desc {
@@ -46,7 +33,6 @@ table.dataTable {
   position: relative;
 }
 
-/* Custom inline sort arrows */
 #dataTable thead th.sorting::after {
   content: "⇅";
   font-size: 11px;
@@ -75,20 +61,11 @@ table.dataTable {
   transform: translateY(-50%);
 }
 
-/* ===============================
-   ACTIVE SORT COLUMN HIGHLIGHT
-   =============================== */
-
 /* Header highlight */
 #dataTable thead th.sorting_asc,
 #dataTable thead th.sorting_desc {
   background-color: #eef3ff;
   font-weight: bold;
-}
-
-/* Cell highlight */
-#dataTable tbody td.sorted {
-  background-color: #f4f7ff;
 }
 
 /* ===============================
@@ -97,32 +74,8 @@ table.dataTable {
 .column-filter {
   width: 100%;
   font-size: 12px;
-  padding-right: 22px;
 }
 
-/* Excel-style funnel icon (Player filter only) */
-#dataTable thead tr.header-filters th:first-child {
-  position: relative;
-}
-
-#dataTable thead tr.header-filters th:first-child::after {
-  content: "";
-  position: absolute;
-  right: 6px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 12px;
-  height: 12px;
-  opacity: 0.6;
-  background-repeat: no-repeat;
-  background-size: contain;
-  background-image: url("data:image/svg+xml;utf8,\
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>\
-<path fill='%23666' d='M3 4h18l-7 8v6l-4 2v-8z'/>\
-</svg>");
-}
-
-/* Prevent sorting from filter row */
 #dataTable thead tr.header-filters th {
   pointer-events: none;
 }
@@ -132,34 +85,15 @@ table.dataTable {
    =============================== */
 #dataTable th,
 #dataTable td {
-  min-width: 140px;
+  min-width: 100px;
   white-space: nowrap;
 }
-/* ===============================
-   CENTER HEADERS & DATA
-   =============================== */
 
-/* Center all header text */
-#dataTable thead th {
+#dataTable thead th,
+#dataTable tbody td {
   text-align: center;
   vertical-align: middle;
 }
-
-/* Center all table data */
-#dataTable tbody td {
-  text-align: center;
-}
-
-/* Keep Player column slightly emphasized */
-#dataTable tbody td:first-child,
-#dataTable thead th:first-child {
-  text-align: center;
-  font-weight: bold;
-}
-
-/* ===============================
-   EXCEL-STYLE ROW STRIPING
-   =============================== */
 
 /* Zebra striping — FORCE all columns including FixedColumns */
 #dataTable tbody tr:nth-child(odd) td,
@@ -169,7 +103,7 @@ table.dataTable {
 
 #dataTable tbody tr:nth-child(even) td,
 .dtfc-fixed-left tbody tr:nth-child(even) td {
-  background-color: #f2f2f2 !important; /* Excel gray */
+  background-color: #f2f2f2 !important;
 }
 
 /* Hover */
@@ -178,30 +112,17 @@ table.dataTable {
   background-color: #e9f1ff !important;
 }
 
-/* ===============================
-   HEADER STYLING (OPTIONAL BUT NICE)
-   =============================== */
-
 #dataTable thead th {
   background-color: #edf2f7;
   border-bottom: 2px solid #cbd5e0;
 }
 
-/* Frozen column divider shadow */
-.dtfc-fixed-left {
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.08);
-}
-
-.header-inline {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-
-.player-filter {
-  font-size: 12px;
-  padding: 2px 4px;
+/* The index column style */
+.index-column {
+  font-weight: normal !important;
+  color: #666;
+  width: 40px !important;
+  min-width: 40px !important;
 }
 </style>
 </head>
@@ -221,8 +142,12 @@ table.dataTable {
 
 <table id="dataTable" class="display" style="width:100%">
   <thead>
-    <tr class="header-titles"></tr>
-    <tr class="header-filters"></tr>
+    <tr class="header-titles">
+      <th class="index-column">#</th>
+    </tr>
+    <tr class="header-filters">
+      <th></th>
+    </tr>
   </thead>
   <tbody></tbody>
 </table>
@@ -245,92 +170,86 @@ fetch("R63 Data.xlsx")
     const headers = json[0];
     const rows = json.slice(1);
 
+    // Populate Headers
     headers.forEach(h => {
       document.querySelector(".header-titles").insertAdjacentHTML("beforeend", `<th>${h}</th>`);
       document.querySelector(".header-filters").insertAdjacentHTML("beforeend", "<th></th>");
     });
 
-    $('#dataTable').DataTable({
+    const table = $('#dataTable').DataTable({
       data: rows,
-columns: headers.map(h => {
+      columns: [
+        { 
+          data: null, 
+          defaultContent: "", 
+          className: "index-column",
+          orderable: false,
+          searchable: false
+        },
+        ...headers.map((h, i) => {
+          const cleanHeader = h.replace(/\s+/g, " ").trim();
 
-  const cleanHeader = h.replace(/\s+/g, " ").trim();
-
-  // Avg. Kills → integer
-  if (cleanHeader.toLowerCase() === "avg. kills") {
-    return {
-      render: function (data, type) {
-        const num = Number(data);
-        if (type === "display" || type === "filter") {
-          return isNaN(num) ? "" : Math.round(num);
-        }
-        return num;
-      }
-    };
-  }
-
-  // 🔥 AUTO-DETECT percentage columns
-  if (
-    cleanHeader.includes("%") ||
-    cleanHeader.toLowerCase().includes("rate") ||
-    cleanHeader.toLowerCase().includes("accuracy")
-  ) {
-    return {
-      render: function (data, type) {
-        const num = Number(data);
-
-        if (type === "display" || type === "filter") {
-          if (isNaN(num)) return "";
-
-          // If value is 0–1, treat as decimal percent
-          if (num <= 1) {
-            return Math.round(num * 100) + "%";
+          // Avg. Kills → integer
+          if (cleanHeader.toLowerCase() === "avg. kills") {
+            return {
+              data: i,
+              render: function (data, type) {
+                const num = Number(data);
+                if (type === "display" || type === "filter") {
+                  return isNaN(num) ? "" : Math.round(num);
+                }
+                return num;
+              }
+            };
           }
 
-          // Otherwise treat as already percent
-          return Math.round(num) + "%";
-        }
+          // Percent columns
+          if (
+            cleanHeader.includes("%") ||
+            cleanHeader.toLowerCase().includes("rate") ||
+            cleanHeader.toLowerCase().includes("accuracy")
+          ) {
+            return {
+              data: i,
+              render: function (data, type) {
+                const num = Number(data);
+                if (type === "display" || type === "filter") {
+                  if (isNaN(num)) return "";
+                  if (num <= 1) return Math.round(num * 100) + "%";
+                  return Math.round(num) + "%";
+                }
+                return num;
+              }
+            };
+          }
 
-        return num; // numeric sorting
-      }
-    };
-  }
-
-  // Default column
-  return null;
-}),
+          return { data: i, defaultContent: "" };
+        })
+      ],
+      scrollX: true,
       scrollY: "70vh",
       scrollCollapse: true,
       paging: false,
-scrollX: true,
-scrollY: "70vh",
-paging: false,
-autoWidth: false,
-orderCellsTop: true,
-
-fixedHeader: true,
-
-fixedColumns: {
-  left: 1   // ✅ FREEZE Player column (header + body)
-},
-
-columnDefs: [
-  { targets: 0, width: 160 }
-],
-autoWidth: false,
+      autoWidth: false,
+      orderCellsTop: true,
+      fixedHeader: true,
+      fixedColumns: {
+        left: 2 // Freeze # and Player
+      },
+      columnDefs: [
+        { targets: 1, width: 160 } // Player column is at index 1
+      ],
       initComplete: function () {
         const api = this.api();
 
-        // Clear all filters button
-$("#clearFilters").on("click", function () {
-  api.search("").columns().search("").draw();
-
-  // Reset Player dropdown UI
-  $(".column-filter").val("");
-});
+        $("#clearFilters").on("click", function () {
+          api.search("").columns().search("").draw();
+          $(".column-filter").val("");
+        });
 
         api.columns().every(function (colIdx) {
-          if (headers[colIdx] !== "Player") return;
+          // Check if the current column is the Player column
+          if (colIdx === 0 || headers[colIdx - 1] !== "Player") return;
 
           const column = this;
           const cell = document.querySelectorAll(".header-filters th")[colIdx];
@@ -349,13 +268,23 @@ $("#clearFilters").on("click", function () {
           });
 
           cell.appendChild(select);
-          const api = this.api();
-
-setTimeout(() => {
-  api.columns.adjust();
-}, 0);
         });
+
+        setTimeout(() => {
+          api.columns.adjust();
+        }, 100);
       }
+    });
+
+    // Dynamic numbering logic based on filtered/sorted result
+    table.on('draw.dt', function () {
+      table.column(0, { search: 'applied', order: 'applied' }).nodes().each(function (cell, i) {
+        cell.innerHTML = i + 1;
+      });
+    }).draw();
+
+    $(window).on('resize', function () {
+        table.columns.adjust();
     });
   });
 </script>

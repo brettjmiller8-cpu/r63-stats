@@ -2,155 +2,147 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Rainbow Six 3 Match Stats</title>
+<title>Rainbow Six 3 Stats Tracker</title>
 
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/3.4.0/css/fixedHeader.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.min.css">
 
 <style>
-/* ===============================
-   BASE TABLE
-   =============================== */
-body {
-  font-family: Arial, sans-serif;
-  margin: 20px;
-}
+  /* ===============================
+     BASE STYLE (MATCHING OB_MA & INDEX)
+     =============================== */
+  body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    margin: 20px; 
+    background-color: #f8f9fa; 
+    color: #2c3e50; 
+  }
 
-table.dataTable {
-  width: 100% !important;
-}
+  .header-box { 
+    background: #2c3e50; 
+    color: white; 
+    padding: 20px; 
+    border-radius: 8px; 
+    margin-bottom: 20px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+  }
 
-/* ===============================
-   HEADER + SORTING
-   =============================== */
+  .nav-buttons { margin-bottom: 20px; }
+  
+  button {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    background: white;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+    color: #2c3e50;
+  }
 
-#dataTable thead th.sorting,
-#dataTable thead th.sorting_asc,
-#dataTable thead th.sorting_desc {
-  background-image: none !important;
-  padding-right: 26px !important;
-  position: relative;
-}
+  button:hover { background: #e9ecef; }
 
-#dataTable thead th.sorting::after {
-  content: "⇅";
-  font-size: 11px;
-  opacity: 0.4;
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-}
+  #clearFilters { 
+    background: #e74c3c; 
+    color: white; 
+    border: none; 
+    margin-bottom: 15px;
+  }
+  
+  #clearFilters:hover { background: #c0392b; }
 
-#dataTable thead th.sorting_asc::after {
-  content: "▲";
-  font-size: 10px;
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-}
+  /* ===============================
+     TABLE CONTAINER (CARD STYLE)
+     =============================== */
+  .stats-container {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border-top: 5px solid #2c3e50;
+  }
 
-#dataTable thead th.sorting_desc::after {
-  content: "▼";
-  font-size: 10px;
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-}
+  /* ===============================
+     DATATABLES OVERRIDES
+     =============================== */
+  table.dataTable { border-collapse: collapse !important; margin-top: 15px !important; }
+  
+  table.dataTable thead th {
+    background: #f1f3f5 !important;
+    color: #2c3e50;
+    font-weight: bold;
+    border: 1px solid #dee2e6 !important;
+    text-align: center !important;
+  }
 
-/* Header highlight */
-#dataTable thead th.sorting_asc,
-#dataTable thead th.sorting_desc {
-  background-color: #eef3ff;
-  font-weight: bold;
-}
+  table.dataTable tbody td {
+    border: 1px solid #dee2e6 !important;
+    text-align: center !important;
+    padding: 10px !important;
+  }
 
-/* ===============================
-   FILTER ROW
-   =============================== */
-.column-filter {
-  width: 100%;
-  font-size: 12px;
-}
+  /* Custom sorting arrows to match cleaner look */
+  #dataTable thead th.sorting::after,
+  #dataTable thead th.sorting_asc::after,
+  #dataTable thead th.sorting_desc::after {
+    position: absolute;
+    right: 8px;
+    opacity: 0.5;
+  }
 
-#dataTable thead tr.header-filters th {
-  pointer-events: none;
-}
+  /* Zebra Striping */
+  table.dataTable.display tbody tr.odd > .sorting_1, 
+  table.dataTable.display tbody tr.odd { background-color: #ffffff !important; }
+  table.dataTable.display tbody tr.even > .sorting_1, 
+  table.dataTable.display tbody tr.even { background-color: #f8f9fa !important; }
 
-/* ===============================
-   COLUMN WIDTH + NO WRAP
-   =============================== */
-#dataTable th,
-#dataTable td {
-  min-width: 100px;
-  white-space: nowrap;
-}
+  /* Hover effect */
+  #dataTable tbody tr:hover td { background-color: #eef3ff !important; }
 
-#dataTable thead th,
-#dataTable tbody td {
-  text-align: center;
-  vertical-align: middle;
-}
+  .column-filter {
+    width: 90%;
+    padding: 4px;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    font-size: 12px;
+  }
 
-/* Zebra striping — FORCE all columns including FixedColumns */
-#dataTable tbody tr:nth-child(odd) td,
-.dtfc-fixed-left tbody tr:nth-child(odd) td {
-  background-color: #ffffff !important;
-}
-
-#dataTable tbody tr:nth-child(even) td,
-.dtfc-fixed-left tbody tr:nth-child(even) td {
-  background-color: #f2f2f2 !important;
-}
-
-/* Hover */
-#dataTable tbody tr:hover td,
-.dtfc-fixed-left tbody tr:hover td {
-  background-color: #e9f1ff !important;
-}
-
-#dataTable thead th {
-  background-color: #edf2f7;
-  border-bottom: 2px solid #cbd5e0;
-}
-
-/* The index column style */
-.index-column {
-  font-weight: normal !important;
-  color: #666;
-  width: 40px !important;
-  min-width: 40px !important;
-}
+  .index-column { color: #7f8c8d; font-weight: bold; }
 </style>
 </head>
 
 <body>
-<h2>Rainbow Six 3: Black Arrow Stats</h2>
-<div style="margin-bottom: 10px;">
+
+<div class="header-box">
+  <h2 style="margin:0;">🎖️ R63: Black Arrow Stats</h2>
+  <button id="clearFilters">🗑 Clear Filters</button>
+</div>
+
+<div class="nav-buttons">
   <a href="index.html"><button>Old Bow Stats</button></a>
   <a href="OB_MA.html"><button>Old Bow Match Analyzer</button></a>
-  <a href="BA.html"><button>Black Arrow Stats</button></a>
+  <a href="BA.html"><button style="background: #e9ecef;">Black Arrow Stats</button></a>
   <a href="BA_MA.html"><button>Black Arrow Match Analyzer</button></a>
+    <a href="Tournament_Champs.html"><button>Tournament Champs</button></a>
+    <a href="Match_submission.html"><button>Match Submission</button></a>
 </div>
 
-<div style="margin-bottom: 10px;">
-  <button id="clearFilters">Clear Filters</button>
+<div class="stats-container">
+  <table id="dataTable" class="display" style="width:100%">
+    <thead>
+      <tr class="header-titles">
+        <th class="index-column">#</th>
+      </tr>
+      <tr class="header-filters">
+        <th></th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 </div>
-
-<table id="dataTable" class="display" style="width:100%">
-  <thead>
-    <tr class="header-titles">
-      <th class="index-column">#</th>
-    </tr>
-    <tr class="header-filters">
-      <th></th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
@@ -163,12 +155,21 @@ fetch("R63 Data.xlsx")
   .then(res => res.arrayBuffer())
   .then(data => {
     const workbook = XLSX.read(data, { type: "array" });
-    const sheetName = "BA";
+    const sheetName = "BA"; // Ensuring we pull from the Black Arrow sheet
     const sheet = workbook.Sheets[sheetName];
     const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
     const headers = json[0];
     const rows = json.slice(1);
+
+    // Filter out rows that are completely empty or missing a Player name
+    const normalizedRows = rows
+      .filter(r => r.length > 0 && r[0] !== undefined && r[0] !== "") 
+      .map(r => {
+        const row = r.slice(0, headers.length);
+        while (row.length < headers.length) row.push("");
+        return row;
+      });
 
     // Populate Headers
     headers.forEach(h => {
@@ -177,7 +178,7 @@ fetch("R63 Data.xlsx")
     });
 
     const table = $('#dataTable').DataTable({
-      data: rows,
+      data: normalizedRows,
       columns: [
         { 
           data: null, 
@@ -187,105 +188,69 @@ fetch("R63 Data.xlsx")
           searchable: false
         },
         ...headers.map((h, i) => {
-          const cleanHeader = h.replace(/\s+/g, " ").trim();
-
-          // Avg. Kills → integer
-          if (cleanHeader.toLowerCase() === "avg. kills") {
+          const cleanHeader = h.replace(/\s+/g, " ").trim().toLowerCase();
+          
+          if (cleanHeader === "avg. kills") {
             return {
               data: i,
-              render: function (data, type) {
-                const num = Number(data);
-                if (type === "display" || type === "filter") {
-                  return isNaN(num) ? "" : Math.round(num);
-                }
-                return num;
-              }
+              render: (data, type) => (type === "display" || type === "filter") ? (isNaN(data) ? "" : Math.round(data)) : data
             };
           }
-
-          // Percent columns
-          if (
-            cleanHeader.includes("%") ||
-            cleanHeader.toLowerCase().includes("rate") ||
-            cleanHeader.toLowerCase().includes("accuracy")
-          ) {
+          
+          if (h.includes("%") || cleanHeader.includes("rate") || cleanHeader.includes("accuracy")) {
             return {
               data: i,
-              render: function (data, type) {
+              render: (data, type) => {
                 const num = Number(data);
                 if (type === "display" || type === "filter") {
                   if (isNaN(num)) return "";
-                  if (num <= 1) return Math.round(num * 100) + "%";
-                  return Math.round(num) + "%";
+                  return num <= 1 ? Math.round(num * 100) + "%" : Math.round(num) + "%";
                 }
                 return num;
               }
             };
           }
-
           return { data: i, defaultContent: "" };
         })
       ],
       scrollX: true,
-      scrollY: "70vh",
+      scrollY: "65vh",
       scrollCollapse: true,
       paging: false,
-      autoWidth: false,
-      orderCellsTop: true,
       fixedHeader: true,
-      fixedColumns: {
-        left: 2 // Freeze # and Player
-      },
-      columnDefs: [
-        { targets: 1, width: 160 } // Player column is at index 1
-      ],
+      fixedColumns: { left: 2 },
+      columnDefs: [{ targets: 1, width: 160 }],
       initComplete: function () {
         const api = this.api();
-
         $("#clearFilters").on("click", function () {
           api.search("").columns().search("").draw();
           $(".column-filter").val("");
         });
 
         api.columns().every(function (colIdx) {
-          // Check if the current column is the Player column
           if (colIdx === 0 || headers[colIdx - 1] !== "Player") return;
-
           const column = this;
           const cell = document.querySelectorAll(".header-filters th")[colIdx];
-
           const select = document.createElement("select");
           select.className = "column-filter";
-          select.innerHTML = "<option value=''>All</option>";
-
+          select.innerHTML = "<option value=''>All Players</option>";
           select.addEventListener("change", function () {
             const val = $.fn.dataTable.util.escapeRegex(this.value);
             column.search(val ? "^" + val + "$" : "", true, false).draw();
           });
-
           column.data().unique().sort().each(d => {
             if (d) select.insertAdjacentHTML("beforeend", `<option value="${d}">${d}</option>`);
           });
-
           cell.appendChild(select);
         });
-
-        setTimeout(() => {
-          api.columns.adjust();
-        }, 100);
       }
     });
 
-    // Dynamic numbering logic based on filtered/sorted result
     table.on('draw.dt', function () {
-      table.column(0, { search: 'applied', order: 'applied' }).nodes().each(function (cell, i) {
-        cell.innerHTML = i + 1;
-      });
+      table.column(0, { search: 'applied', order: 'applied' }).nodes().each((cell, i) => cell.innerHTML = i + 1);
     }).draw();
 
-    $(window).on('resize', function () {
-        table.columns.adjust();
-    });
+    $(window).on('resize', () => table.columns.adjust());
   });
 </script>
 </body>

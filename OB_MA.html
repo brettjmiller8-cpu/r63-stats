@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>R63: Old Bow Match Analyzer</title>
+<title>Rainbow Six 3 Stats Tracker</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f8f9fa; color: #2c3e50; }
@@ -14,6 +14,21 @@
   .green-border { border-left-color: #27ae60; }
   .red-border { border-left-color: #e74c3c; }
   
+  .nav-buttons { margin-bottom: 20px; }
+  
+  button {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    background: white;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+    color: #2c3e50;
+  }
+
+  button:hover { background: #e9ecef; }
+
   h3 { margin-top: 0; display: flex; justify-content: space-between; align-items: center; }
   
   table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85rem; }
@@ -49,9 +64,11 @@
 </div>
 <div style="margin-bottom: 10px;">
   <a href="index.html"><button>Old Bow Stats</button></a>
-  <a href="OB_MA.html"><button>Old Bow Match Analyzer</button></a>
+  <a href="OB_MA.html"><button style="background: #e9ecef;">Old Bow Match Analyzer</button></a>
   <a href="BA.html"><button>Black Arrow Stats</button></a>
   <a href="BA_MA.html"><button>Black Arrow Match Analyzer</button></a>
+  <a href="Tournament_Champs.html"><button>Tournament Champs</button></a>
+  <a href="Match_submission.html"><button>Match Submission</button></a>
 </div>
 
 <div class="container">
@@ -71,7 +88,7 @@
     </table>
     
     <div class="top-maps" id="greenTopMaps">
-      <strong>Top 3 Strengths:</strong> <span>Select players to calculate...</span>
+      <strong>Top 3 Maps:</strong> <span>Select players to calculate...</span>
     </div>
 
     <div class="heatmap-container">
@@ -95,7 +112,7 @@
     </table>
 
     <div class="top-maps" id="redTopMaps">
-      <strong>Top 3 Strengths:</strong> <span>Select players to calculate...</span>
+      <strong>Top 3 Maps:</strong> <span>Select players to calculate...</span>
     </div>
 
     <div class="heatmap-container">

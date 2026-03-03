@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Rainbow Six 3 Stats Tracker</title>
+
+<style>
+  /* ===============================
+     BASE STYLE (MATCHING PREVIOUS)
+     =============================== */
+  body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    margin: 20px; 
+    background-color: #f8f9fa; 
+    color: #2c3e50; 
+  }
+
+  .header-box { 
+    background: #2c3e50; 
+    color: white; 
+    padding: 20px; 
+    border-radius: 8px; 
+    margin-bottom: 20px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+  }
+
+  .nav-buttons { margin-bottom: 20px; }
+  
+  button {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    background: white;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+    color: #2c3e50;
+    text-decoration: none;
+  }
+
+  button:hover { background: #e9ecef; }
+
+  /* ===============================
+     CHAMPIONS GRID LAYOUT
+     =============================== */
+  .champs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+    margin-top: 20px;
+  }
+
+  .champ-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border-top: 5px solid #2c3e50; /* Matching the table style */
+    overflow: hidden;
+    transition: transform 0.2s;
+  }
+
+  .champ-card:hover {
+    transform: translateY(-5px);
+  }
+
+.champ-image {
+    width: 100%;
+    height: auto;          /* Allows the image to maintain its natural aspect ratio */
+    display: block;        /* Removes bottom gap */
+    background-color: #f1f3f5;
+    border-bottom: 1px solid #eee;
+  }
+
+  .champ-info {
+    padding: 20px;
+  }
+
+  .champ-name {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin: 0 0 10px 0;
+    color: #2c3e50;
+  }
+
+  .champ-description {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #7f8c8d;
+    margin: 0;
+  }
+
+  .tournament-date {
+    display: inline-block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: #f1f3f5;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    font-weight: bold;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="header-box">
+  <h2 style="margin:0;">🏆 Tournament Champs</h2>
+</div>
+
+<div class="nav-buttons">
+  <a href="index.html"><button>Old Bow Stats</button></a>
+  <a href="OB_MA.html"><button>Old Bow Match Analyzer</button></a>
+  <a href="BA.html"><button>Black Arrow Stats</button></a>
+  <a href="BA_MA.html"><button>Black Arrow Match Analyzer</button></a>
+  <a href="Tournament_Champs.html"><button style="background: #e9ecef;">Tournament Champs</button></a>
+  <a href="Match_submission.html"><button>Match Submission</button></a>
+</div>
+
+<div class="champs-grid">
+
+  <div class="champ-card">
+    <img src="tourney_champ_1.png" alt="Tournament Winner" class="champ-image">
+    <div class="champ-info">
+      <span class="tournament-date">Cash Tourney #1 Winner January 2026</span>
+      <h3 class="champ-name">Breakfast of Champions</h3>
+      <p class="champ-description">
+        Team Pancake led by an MVP performance from Merk N U with 44 kills, defeats Team Motion in a thrilling 3-2 final.
+      </p>
+    </div>
+  </div>
+
+  <div class="champ-card">
+    <img src="tourney_champ_2.png" alt="Tournament Winner" class="champ-image">
+    <div class="champ-info">
+      <span class="tournament-date">Cash Tourney #2 Winner February 2026</span>
+      <h3 class="champ-name">Team Itch</h3>
+      <p class="champ-description">
+        Team Itch takes the W over Team Carnage in another thrilling 3-2 tournament final, led by NSANE Velocity's 56 kills, making him the tournament MVP.
+      </p>
+    </div>
+  </div>
+  <div class="champ-card">
+    <img src="tourney_champ_3.png" alt="Tournament Winner" class="champ-image">
+    <div class="champ-info">
+      <span class="tournament-date">Cash Tourney #3 Winner March 2026</span>
+      <h3 class="champ-name">Team Perception</h3>
+      <p class="champ-description">
+        Team Perception was too much offensive firepower for Team Juvenile Killas to handle, as Team Perception wins 3-1 led by NSANE Breakfast's MVP performance and 43 kills. NSANE Breakfast and NSANE Itch now 2x Tournament Champs.
+      </p>
+    </div>
+  </div>
+  </div>
+
+</body>
+</html>

@@ -111,8 +111,63 @@
   }
 
   .index-column { color: #7f8c8d; font-weight: bold; }
+
+  /* New Styles for Date and Comments */
+  .last-updated-container {
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .date-badge {
+    background: #e9ecef;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+    color: #2c3e50;
+    border: 1px solid #dee2e6;
+  }
+
+  .comments-container {
+    margin-top: 30px;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border-top: 5px solid #7f8c8d;
+  }
+
+  .comments-container h3 {
+    margin-top: 0;
+    font-size: 1.1rem;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #matchComments {
+    width: 100%;
+    min-height: 120px;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    font-family: inherit;
+    font-size: 0.95rem;
+    resize: vertical;
+    box-sizing: border-box;
+    background-color: #fcfcfc;
+  }
+
+  #matchComments:focus {
+    outline: none;
+    border-color: #2c3e50;
+    background-color: #fff;
+  }
 </style>
-</head>
 
 <body>
 
@@ -127,9 +182,13 @@
   <a href="BA.html"><button>Black Arrow Stats</button></a>
   <a href="BA_MA.html"><button>Black Arrow Match Analyzer</button></a>
   <a href="Tournament_Champs.html"><button>Tournament Champs</button></a>
-   <a href="Match_submission.html"><button>Match Submission</button></a>
+  <a href="Match_submission.html"><button>Match Submission</button></a>
 </div>
 
+<div class="last-updated-container">
+  <span>📅 Date Last Updated:</span>
+  <span class="date-badge">March 1, 2026</span>
+</div>
 <div class="stats-container">
   <table id="dataTable" class="display" style="width:100%">
     <thead>
@@ -143,6 +202,24 @@
     <tbody></tbody>
   </table>
 </div>
+<div class="stats-container">
+  <table id="dataTable" class="display" style="width:100%">
+    </table>
+</div>
+
+<div class="comments-container">
+  <h3>📝 General Match Comments</h3>
+  <div id="matchComments">
+    *1/31 match not added due to incomplete data<br>		
+    *2/19 match not added due to incomplete data		
+  </div>
+</div>
+</style>
+</head>
+
+<body>
+
+
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>

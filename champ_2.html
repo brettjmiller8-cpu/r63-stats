@@ -55,7 +55,31 @@
       height: auto;
       border-radius: 8px;
     }
-    
+        .video-container {
+    display: flex;
+    flex-direction: column; /* Forces items to stack vertically */
+    align-items: center;    /* Centers the video/image horizontally */
+    margin-bottom: 20px;
+  }
+
+  /* We reduced the max-width from 800px to 500px to make it smaller */
+  .video-wrapper {
+    position: relative;
+    display: block;
+    max-width: 500px; 
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid #9146ff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  }
+
+  .video-footer-text {
+    margin-top: 12px;
+    color: #9146ff;
+    font-weight: bold;
+    font-size: 0.9rem;
+  }
     
     .video-title { font-weight: bold; margin-bottom: 10px; font-size: 1.1rem; }
     .stats { margin: 20px 0; line-height: 1.6; }
@@ -74,13 +98,20 @@
     <div class="stats">
       <p>Team Itch took the victory over Team Carnage in a thrilling 3-2 tournament final. The victory was fueled by <strong>NSANE Velocity's</strong> incredible MVP performance, racking up 56 kills.</p>
     </div>
-<div class="video-title">📺 Tournament Highlights & Final Match</div>
+<div class="video-title">📺 Watch the Tournament Final Stream</div>
 <div class="video-container">
-  <iframe
-    src="https://player.twitch.tv/?video=v2686752062&parent=localhost&parent=127.0.0.1&autoplay=false"
-    class="twitch-embed"
-    allowfullscreen>
-  </iframe>
+  <a href="https://www.twitch.tv/videos/2686752062" target="_blank" rel="noopener noreferrer" class="video-wrapper">
+    
+    <img src="vid_overlay.jpg" alt="Watch Tournament Highlights on Twitch" style="width: 100%; height: auto; display: block;">
+
+    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+      <svg height="60px" width="60px" viewBox="0 0 490 490" fill="#ffffff" style="filter: drop-shadow(0 0 10px rgba(0,0,0,0.7));">
+        <path d="M452.257,211.651L113.693,9.22c-21.72-13.06-49.33-12.01-69.83,2.69C23.363,26.61,11,51.811,11,79.167V410.833 c0,27.356,12.363,52.557,32.863,67.257c11.08,7.96,23.94,11.91,36.79,11.91c11.23,0,22.45-3.04,32.51-9.1l338.564-202.431 c23.23-13.881,37.273-38.961,37.273-66.829C489.5,250.612,475.457,225.532,452.257,211.651z"/>
+      </svg>
+    </div>
+  </a>
+  
+  <div class="video-footer-text">Click image to watch the full match on Twitch.tv</div>
 </div>
     <div class="image-row">
       <img src="champ2match1.png" alt="Match 1" class="small-img">

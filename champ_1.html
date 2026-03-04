@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Champ Detail - Breakfast of Champions</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; margin: 40px; background: #f8f9fa; color: #2c3e50; text-align: center; }
+    .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    
+    .img-container, .video-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .large-img, .twitch-embed {
+      max-width: 800px;
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+
+    /* Maintains 16:9 aspect ratio for the video player */
+    .twitch-embed {
+      aspect-ratio: 16 / 9;
+      border: none;
+    }
+
+    .image-row {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap; 
+    }
+
+    .small-img {
+      max-width: 400px;
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+    
+    .stats { margin: 20px 0; line-height: 1.6; }
+    .back-btn { display: inline-block; margin-top: 20px; padding: 10px 20px; background: #2c3e50; color: white; text-decoration: none; border-radius: 6px; }
+    .video-title { font-weight: bold; margin-bottom: 10px; font-size: 1.1rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏆 Breakfast of Champions</h1>
+    <p><strong>Tournament:</strong> Cash Tourney #1 (January 2026)</p>
+    
+    <div class="img-container">
+      <img src="tourney_champ_1.png" alt="Breakfast of Champions Winner" class="large-img">
+    </div>
+
+    <div class="stats">
+      <p>Team Pancake (Breakfast of Champions) took the crown in a hard-fought tournament. After defeating <strong>Team Rooks 3-2</strong> in the opening rounds, they faced <strong>Team Tony</strong> in a legendary 3-2 final. <strong>Merk N U</strong> secured the MVP title with a massive 44-kill performance.</p>
+    </div>
+
+<div class="video-title">📺 Tournament Highlights & Final Match</div>
+<div class="video-container">
+  <iframe
+    src="https://player.twitch.tv/?video=v2673960757&parent=localhost&parent=127.0.0.1"
+    class="twitch-embed"
+    allowfullscreen>
+  </iframe>
+</div>
+
+    <div class="image-row">
+      <img src="champ1match1.png" alt="Match 1" class="small-img">
+      <img src="champ1match2.png" alt="Match 2" class="small-img">
+    </div>
+
+    <div class="img-container">
+      <img src="champ1match3.png" alt="Progression" class="large-img">
+    </div>
+    
+    <div class="img-container">
+      <img src="champ1final.png" alt="Final Results" class="large-img">
+    </div>
+
+    <a href="Tournament_Champs.html" class="back-btn">← Back to Champions</a>
+  </div>
+</body>
+</html>

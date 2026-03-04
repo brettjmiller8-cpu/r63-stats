@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Champ Detail - Team Itch</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; margin: 40px; background: #f8f9fa; color: #2c3e50; text-align: center; }
+    .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    
+    .img-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .large-img {
+      max-width: 800px;
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+
+    .image-row {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap; 
+    }
+
+    .small-img {
+      max-width: 400px;
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+    
+        /* Maintains 16:9 aspect ratio for the video player */
+    .twitch-embed {
+      aspect-ratio: 16 / 9;
+      border: none;
+    }
+
+    .image-row {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap; 
+    }
+
+    .small-img {
+      max-width: 400px;
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+    
+    
+    .video-title { font-weight: bold; margin-bottom: 10px; font-size: 1.1rem; }
+    .stats { margin: 20px 0; line-height: 1.6; }
+    .back-btn { display: inline-block; margin-top: 20px; padding: 10px 20px; background: #2c3e50; color: white; text-decoration: none; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏆 Team Itch</h1>
+    <p><strong>Tournament:</strong> Cash Tourney #2 (February 2026)</p>
+    
+    <div class="img-container">
+      <img src="tourney_champ_2.png" alt="Team Itch Winner" class="large-img">
+    </div>
+
+    <div class="stats">
+      <p>Team Itch took the victory over Team Carnage in a thrilling 3-2 tournament final. The victory was fueled by <strong>NSANE Velocity's</strong> incredible MVP performance, racking up 56 kills.</p>
+    </div>
+<div class="video-title">📺 Tournament Highlights & Final Match</div>
+<div class="video-container">
+  <iframe
+    src="https://player.twitch.tv/?video=v2686752062&parent=localhost&parent=127.0.0.1&autoplay=false"
+    class="twitch-embed"
+    allowfullscreen>
+  </iframe>
+</div>
+    <div class="image-row">
+      <img src="champ2match1.png" alt="Match 1" class="small-img">
+      <img src="champ2match2.png" alt="Match 2" class="small-img">
+    </div>
+
+    <div class="img-container">
+      <img src="champ2match3.png" alt="Progression" class="large-img">
+    </div>
+    
+    <div class="img-container">
+      <img src="champ2final.png" alt="Final Results" class="large-img">
+    </div>
+
+    <a href="Tournament_Champs.html" class="back-btn">← Back to Champions</a>
+  </div>
+</body>
+</html>

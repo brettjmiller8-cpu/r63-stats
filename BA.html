@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <title>Rainbow Six 3 Stats Tracker</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/3.4.0/css/fixedHeader.dataTables.min.css">
@@ -187,7 +190,7 @@
 </div>
 <div class="last-updated-container">
   <span>📅 Date Last Updated:</span>
-  <span class="date-badge">March 3, 2026</span>
+  <span class="date-badge">March 6, 2026</span>
 </div>
 <div class="stats-container">
   <table id="dataTable" class="display" style="width:100%">
@@ -210,6 +213,7 @@
 *2/22/26 match not included, Tony fell asleep<br>
 *2/28/26 match did not have kills for both teams<br>
 *3/2/26 match no kills for Focus, Choi, Tail, Kyle, Hopes, FlyinRyan<br>
+*3/5/26 match #2 DNF, stats not included <br>
 
   </div>
 </div>
@@ -221,7 +225,7 @@
 <script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
 
 <script>
-fetch("R63 Data.xlsx")
+fetch("R63 Data.xlsx?v=" + new Date().getTime())
   .then(res => res.arrayBuffer())
   .then(data => {
     const workbook = XLSX.read(data, { type: "array" });

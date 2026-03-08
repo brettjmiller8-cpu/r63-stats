@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <title>Rainbow Six 3 Stats Tracker</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f8f9fa; color: #2c3e50; }
@@ -134,7 +138,7 @@ const MAP_COLUMNS = ['Agora','Airport 1','Back Alleys','Café','Castle','Ferry B
 
 fetch("R63 Data.xlsx").then(res => res.arrayBuffer()).then(buffer => {
   const wb = XLSX.read(buffer, { type: "array" });
-  const sheet = wb.Sheets["BA"]; 
+  const sheet = wb.Sheets["BA v2"]; 
   const data = XLSX.utils.sheet_to_json(sheet);
   
   PLAYER_DATA = data.map(d => {

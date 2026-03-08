@@ -13,7 +13,7 @@
 
 <style>
   /* ===============================
-     BASE STYLE (MATCHING OB_MA)
+     BASE STYLE
      =============================== */
   body { 
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -57,9 +57,6 @@
   
   #clearFilters:hover { background: #c0392b; }
 
-  /* ===============================
-     TABLE CONTAINER (CARD STYLE)
-     =============================== */
   .stats-container {
     background: white;
     padding: 20px;
@@ -68,11 +65,6 @@
     border-top: 5px solid #2c3e50;
   }
 
-  /* ===============================
-     DATATABLES OVERRIDES
-     =============================== */
-  table.dataTable { border-collapse: collapse !important; margin-top: 15px !important; }
-  
   table.dataTable thead th {
     background: #f1f3f5 !important;
     color: #2c3e50;
@@ -87,54 +79,62 @@
     padding: 10px !important;
   }
 
-  /* Custom sorting arrows to match OB_MA cleaner look */
-  #dataTable thead th.sorting::after,
-  #dataTable thead th.sorting_asc::after,
-  #dataTable thead th.sorting_desc::after {
+  /* Clickable Player Name Style */
+  .player-link {
+    color: #3498db;
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  .player-link:hover { color: #2980b9; }
+
+  /* Modal Styling */
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.6);
+    backdrop-filter: blur(3px);
+  }
+  .modal-content {
+    background-color: white;
+    margin: 2% auto;
+    padding: 25px;
+    border-radius: 12px;
+    width: 85%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+  .close-btn {
     position: absolute;
-    right: 8px;
-    opacity: 0.5;
+    right: 20px;
+    top: 15px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #95a5a6;
   }
 
-  /* Zebra Striping */
-  table.dataTable.display tbody tr.odd > .sorting_1, 
-  table.dataTable.display tbody tr.odd { background-color: #ffffff !important; }
-  table.dataTable.display tbody tr.even > .sorting_1, 
-  table.dataTable.display tbody tr.even { background-color: #f8f9fa !important; }
-
-  /* Hover effect */
-  #dataTable tbody tr:hover td { background-color: #eef3ff !important; }
-
-  .column-filter {
-    width: 90%;
-    padding: 4px;
-    border-radius: 4px;
-    border: 1px solid #ced4da;
-    font-size: 12px;
+  .chart-container {
+    margin-bottom: 40px;
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    height: 300px;
   }
 
+  .column-filter { width: 90%; padding: 4px; border-radius: 4px; border: 1px solid #ced4da; font-size: 12px; }
   .index-column { color: #7f8c8d; font-weight: bold; }
 
-  /* New Styles for Date and Comments */
-  .last-updated-container {
-    margin-bottom: 15px;
-    font-size: 0.9rem;
-    color: #7f8c8d;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
+  .last-updated-container { margin-bottom: 15px; font-size: 0.9rem; color: #7f8c8d; display: flex; align-items: center; gap: 8px; }
+  .date-badge { background: #e9ecef; padding: 4px 12px; border-radius: 20px; font-weight: bold; color: #2c3e50; border: 1px solid #dee2e6; }
 
-  .date-badge {
-    background: #e9ecef;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-weight: bold;
-    color: #2c3e50;
-    border: 1px solid #dee2e6;
-  }
-
-  .comments-container {
+    .comments-container {
     margin-top: 30px;
     background: white;
     padding: 20px;
@@ -170,7 +170,9 @@
     border-color: #2c3e50;
     background-color: #fff;
   }
+
 </style>
+</head>
 
 <body>
 
@@ -192,15 +194,12 @@
   <span>📅 Date Last Updated:</span>
   <span class="date-badge">March 5, 2026</span>
 </div>
+
 <div class="stats-container">
   <table id="dataTable" class="display" style="width:100%">
     <thead>
-      <tr class="header-titles">
-        <th class="index-column">#</th>
-      </tr>
-      <tr class="header-filters">
-        <th></th>
-      </tr>
+      <tr class="header-titles"><th class="index-column">#</th></tr>
+      <tr class="header-filters"><th></th></tr>
     </thead>
     <tbody></tbody>
   </table>
@@ -209,42 +208,158 @@
 <div class="comments-container">
   <h3>📝 General Match Comments</h3>
   <div id="matchComments">
-    *1/31 match not added due to incomplete data<br>		
+    *1/31 match not added due to incomplete data on maps<br>		
     *2/19 match not added due to incomplete data		
   </div>
 </div>
-</head>
+
+<div id="statsModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeModal()">&times;</span>
+    <h2 id="modalPlayerName" style="text-align:center; color:#2c3e50; margin-bottom:30px;">Player History</h2>
+    
+    <div class="chart-container">
+        <h4 style="margin:0 0 10px 0;">Running Average Kills</h4>
+        <canvas id="killsChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <h4 style="margin:0 0 10px 0;">Running Map Win %</h4>
+        <canvas id="mapsChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <h4 style="margin:0 0 10px 0;">Running Round Win %</h4>
+        <canvas id="roundsChart"></canvas>
+    </div>
+
+        <div class="chart-container">
+        <h4 style="margin:0 0 10px 0;">Running Match Win %</h4>
+        <canvas id="matchesChart"></canvas>
+    </div>
+  </div>
+</div>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/fixedheader/3.4.0/js/dataTables.fixedHeader.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+let globalHistory = {}; 
+let activeCharts = [];
+
+function closeModal() {
+  document.getElementById("statsModal").style.display = "none";
+}
+
+// Helper to convert Excel Serial Date to MM-DD-YYYY
+function formatExcelDate(val) {
+    if (typeof val === 'number') {
+        const date = new Date((val - 25569) * 86400 * 1000);
+        const mm = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+        const dd = String(date.getDate()).padStart(2, '0');
+        const yyyy = date.getFullYear();
+        return `${mm}-${dd}-${yyyy}`;
+    }
+    return val;
+}
+
+function showPlayerStats(playerName) {
+  const data = globalHistory[playerName];
+  if (!data) {
+    alert("No history data found for " + playerName + " in the BA History tab.");
+    return;
+  }
+
+  document.getElementById("modalPlayerName").innerText = playerName + " - Historical Trends";
+  document.getElementById("statsModal").style.display = "block";
+
+  // Destroy old charts to prevent ghosting
+  activeCharts.forEach(c => c.destroy());
+  activeCharts = [];
+
+  const labels = data.map(d => d.date);
+
+  // 1. Kills Chart
+  activeCharts.push(new Chart(document.getElementById('killsChart'), {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{ label: 'Avg Kills', data: data.map(d => d.kills), borderColor: '#34495e', backgroundColor: 'rgba(52, 73, 94, 0.1)', fill: true, tension: 0.3 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  }));
+
+  // 2. Maps Chart
+  activeCharts.push(new Chart(document.getElementById('mapsChart'), {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{ label: 'Map Win %', data: data.map(d => d.maps * 100), borderColor: '#e67e22', backgroundColor: 'rgba(230, 126, 34, 0.1)', fill: true, tension: 0.3 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
+  }));
+
+  // 3. Rounds Chart
+  activeCharts.push(new Chart(document.getElementById('roundsChart'), {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{ label: 'Round Win %', data: data.map(d => d.rounds * 100), borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)', fill: true, tension: 0.3 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
+  }));
+
+    // 4. Matches Chart
+  activeCharts.push(new Chart(document.getElementById('matchesChart'), {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{ label: 'Match Win %', data: data.map(d => d.matches * 100), borderColor: '#9b59b6', backgroundColor: 'rgba(155, 89, 182, 0.1)', fill: true, tension: 0.3 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
+  }));
+}
+
 fetch("R63 Data.xlsx?v=" + new Date().getTime())
   .then(res => res.arrayBuffer())
   .then(data => {
     const workbook = XLSX.read(data, { type: "array" });
-    const sheetName = "Old Bow";
-    const sheet = workbook.Sheets[sheetName];
-    const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
+    // --- LOAD HISTORY ---
+    const histSheet = workbook.Sheets["OB History"];
+    if (histSheet) {
+        const histJson = XLSX.utils.sheet_to_json(histSheet);
+        histJson.forEach(row => {
+            const p = row["Player"];
+            if (!globalHistory[p]) globalHistory[p] = [];
+            globalHistory[p].push({
+                date: formatExcelDate(row["Date"]),
+                kills: row["Overall Avg Kills"] || 0,
+                maps: row["Running Avg. Maps"] || 0,
+                rounds: row["R Avg Rounds"] || 0,
+                matches: row["Running Avg. Matches"] || 0
+            });
+        });
+    }
+
+    // --- LOAD MAIN TABLE ---
+    const sheet = workbook.Sheets["Old Bow v2"];
+    const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
     const headers = json[0];
     const rows = json.slice(1);
 
-    // Filter out rows that are completely empty or missing a Player name
     const normalizedRows = rows
       .filter(r => r.length > 0 && r[0] !== undefined && r[0] !== "") 
       .map(r => {
         const row = r.slice(0, headers.length);
-        while (row.length < headers.length) {
-          row.push("");
-        }
+        while (row.length < headers.length) row.push("");
         return row;
       });
 
-    // Populate Headers
     headers.forEach(h => {
       document.querySelector(".header-titles").insertAdjacentHTML("beforeend", `<th>${h}</th>`);
       document.querySelector(".header-filters").insertAdjacentHTML("beforeend", "<th></th>");
@@ -253,101 +368,64 @@ fetch("R63 Data.xlsx?v=" + new Date().getTime())
     const table = $('#dataTable').DataTable({
       data: normalizedRows,
       columns: [
-        { 
-          data: null, 
-          defaultContent: "", 
-          className: "index-column",
-          orderable: false,
-          searchable: false
-        },
+        { data: null, defaultContent: "", className: "index-column", orderable: false, searchable: false },
         ...headers.map((h, i) => {
           const cleanHeader = h.replace(/\s+/g, " ").trim().toLowerCase();
 
-          if (cleanHeader === "avg. kills") {
+          if (cleanHeader === "player") {
             return {
               data: i,
-              render: function (data, type) {
-                const num = Number(data);
-                if (type === "display" || type === "filter") {
-                  return isNaN(num) ? "" : Math.round(num);
-                }
-                return num;
+              render: function(data, type) {
+                if (type === 'display') return `<span class="player-link" onclick="showPlayerStats('${data}')">${data}</span>`;
+                return data;
               }
             };
+          }
+
+          if (cleanHeader === "avg. kills") {
+            return { data: i, render: (d, t) => (t==='display'||t==='filter') ? (isNaN(Number(d)) ? "" : Math.round(Number(d))) : d };
           }
 
           if (h.includes("%") || cleanHeader.includes("rate") || cleanHeader.includes("accuracy")) {
-            return {
-              data: i,
-              render: function (data, type) {
-                const num = Number(data);
-                if (type === "display" || type === "filter") {
-                  if (isNaN(num)) return "";
-                  return num <= 1 ? Math.round(num * 100) + "%" : Math.round(num) + "%";
+            return { data: i, render: (d, t) => {
+                if (t==='display'||t==='filter') {
+                    const n = Number(d); if (isNaN(n)) return "";
+                    return n <= 1 ? Math.round(n * 100) + "%" : Math.round(n) + "%";
                 }
-                return num;
-              }
-            };
+                return d;
+            }};
           }
-
           return { data: i, defaultContent: "" };
         })
       ],
-      scrollX: true,
-      scrollY: "65vh",
-      scrollCollapse: true,
-      paging: false,
-      autoWidth: false,
-      orderCellsTop: true,
-      fixedHeader: true,
-      fixedColumns: {
-        left: 2 
-      },
-      columnDefs: [
-        { targets: 1, width: 160 } 
-      ],
+      scrollX: true, scrollY: "65vh", paging: false, fixedHeader: true, fixedColumns: { left: 2 },
+      columnDefs: [{ targets: 1, width: 160 }],
       initComplete: function () {
         const api = this.api();
-
-        $("#clearFilters").on("click", function () {
-          api.search("").columns().search("").draw();
-          $(".column-filter").val("");
-        });
-
+        $("#clearFilters").on("click", () => { api.search("").columns().search("").draw(); $(".column-filter").val(""); });
         api.columns().every(function (colIdx) {
           if (colIdx === 0 || headers[colIdx - 1] !== "Player") return;
-
           const column = this;
-          const cell = document.querySelectorAll(".header-filters th")[colIdx];
-
-          const select = document.createElement("select");
-          select.className = "column-filter";
-          select.innerHTML = "<option value=''>All Players</option>";
-
-          select.addEventListener("change", function () {
-            const val = $.fn.dataTable.util.escapeRegex(this.value);
-            column.search(val ? "^" + val + "$" : "", true, false).draw();
-          });
+          const select = $('<select class="column-filter"><option value="">All Players</option></select>')
+            .appendTo($(document.querySelectorAll(".header-filters th")[colIdx]))
+            .on("change", function() { column.search(this.value ? "^"+this.value+"$" : "", true, false).draw(); });
 
           column.data().unique().sort().each(d => {
-            if (d) select.insertAdjacentHTML("beforeend", `<option value="${d}">${d}</option>`);
+            if (d) {
+                const clean = String(d).replace(/<[^>]*>?/gm, ''); // Strip HTML for filter
+                select.append(`<option value="${clean}">${clean}</option>`);
+            }
           });
-
-          cell.appendChild(select);
         });
       }
     });
 
     table.on('draw.dt', function () {
-      table.column(0, { search: 'applied', order: 'applied' }).nodes().each(function (cell, i) {
-        cell.innerHTML = i + 1;
-      });
+      table.column(0, { search: 'applied', order: 'applied' }).nodes().each((cell, i) => cell.innerHTML = i + 1);
     }).draw();
-
-    $(window).on('resize', function () {
-        table.columns.adjust();
-    });
   });
+
+window.onclick = (e) => { if (e.target == document.getElementById("statsModal")) closeModal(); }
 </script>
 </body>
 </html>

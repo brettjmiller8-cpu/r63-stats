@@ -229,7 +229,7 @@ function updateTeam(tableId) {
 
   const f = document.querySelector(`#${tableId} tfoot`);
   f.querySelector(".sumKills").textContent = totals.kills;
-  f.querySelector(".avgKills").textContent = totals.count ? (totals.avgk / totals.count).toFixed(1) : 0;
+  f.querySelector(".avgKills").textContent = totals.avgk.toFixed(1);
   f.querySelector(".avgMatch").textContent = totals.count ? Math.round(totals.m_pct / totals.count) + "%" : "0%";
   f.querySelector(".avgMap").textContent = totals.count ? Math.round(totals.map_pct / totals.count) + "%" : "0%";
   f.querySelector(".avgRound").textContent = totals.count ? Math.round(totals.r_pct / totals.count) + "%" : "0%";

@@ -134,7 +134,7 @@
 </div>
 <script>
 let PLAYER_DATA = [];
-const MAP_COLUMNS = ['Agora','Airport 1','Back Alleys','Café','Castle','Ferry Boat','Garage','Harbor Warehouse','Kesba','Military Base','Nuclear Reactor','Observatory','Office Complex','Old Ruins','Presidio','Pumping Station','Rocket Facility','Streets of Milan','Subway','Village'];
+const MAP_COLUMNS = ['Agora','Airport 1','Back Alleys','Café','Castle','Ferry Boat','Garage','Harbor Warehouse','Hotel','Kesba','Military Base','Nuclear Reactor','Observatory','Office Complex','Old Ruins','Presidio','Pumping Station','Rocket Facility','Streets of Milan','Subway','Village'];
 
 fetch("R63 Data.xlsx").then(res => res.arrayBuffer()).then(buffer => {
   const wb = XLSX.read(buffer, { type: "array" });

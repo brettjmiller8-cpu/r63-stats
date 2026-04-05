@@ -152,6 +152,19 @@
     gap: 8px;
   }
 
+  #matchComments {
+    width: 100%;
+    min-height: 120px;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    font-family: inherit;
+    font-size: 0.95rem;
+    resize: vertical;
+    box-sizing: border-box;
+    background-color: #fcfcfc;
+  }
+
   /* H2H Specific Styles */
   .h2h-controls {
     display: flex;
@@ -169,20 +182,6 @@
     border-radius: 4px;
     border: 1px solid #ced4da;
     min-width: 150px;
-    font-weight: 600;
-  }
-
-  #matchComments {
-    width: 100%;
-    min-height: 120px;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid #ced4da;
-    font-family: inherit;
-    font-size: 0.95rem;
-    resize: vertical;
-    box-sizing: border-box;
-    background-color: #fcfcfc;
   }
 </style>
 </head>
@@ -190,14 +189,14 @@
 <body>
 
 <div class="header-box">
-  <h2 style="margin:0;">🎖️ R63: Black Arrow Stats</h2>
+  <h2 style="margin:0;">🎖️ R63: Old Bow Stats</h2>
   <button id="clearFilters">🗑 Clear Filters</button>
 </div>
 
 <div class="nav-buttons">
-  <a href="index.html"><button>Old Bow Stats</button></a>
+  <a href="index.html"><button style="background: #e9ecef;">Old Bow Stats</button></a>
   <a href="OB_MA.html"><button>Old Bow Match Analyzer</button></a>
-  <a href="BA.html"><button style="background: #e9ecef;">Black Arrow Stats</button></a>
+  <a href="BA.html"><button>Black Arrow Stats</button></a>
   <a href="BA_MA.html"><button>Black Arrow Match Analyzer</button></a>
   <a href="Tournament_Champs.html"><button>Tournament Champs</button></a>
   <a href="Match_submission.html"><button>Match Submission</button></a>
@@ -205,14 +204,16 @@
 
 <div class="last-updated-container">
   <span>📅 Date Last Updated:</span>
-  <span class="date-badge">April 3rd 2026</span>
+  <span class="date-badge">April 5th 2026</span>
 </div>
+
 <div class="tabs" style="margin-bottom: 20px;">
-  <a href="BA.html"><button style="background: #e9ecef;">All Time Leaderboard</button></a>
-  <a href="BA_v2.html"><button>Season 2</button></a>
+  <a href="index.html"><button>All Time Leaderboard</button></a>
+  <a href="index_v2.html"><button style="background: #e9ecef;">Season 2</button></a>
 </div>
+
 <div class="comments-container" style="border-top: 5px solid #3498db;">
-  <h3>⚔️ Black Arrow Head-to-Head Comparison</h3>
+  <h3>⚔️ Old Bow Head-to-Head Comparison</h3>
   <div class="h2h-controls">
     <div>
       <label>Player 1: </label>
@@ -242,11 +243,8 @@
 <div class="comments-container">
   <h3>📝 General Match Comments</h3>
   <div id="matchComments">
-    *2/22/26 match not included, Tony fell asleep<br>
-    *2/28/26 match did not have kills for both teams<br>
-    *3/2/26 match no kills for Focus, Choi, Broken, Tail, Kyle, Hopes, FlyinRyan<br>
-    *3/5/26 match #2 DNF, stats not included <br>
-    *3/28/26 Team 2 kills not included, match data incomplete<br>
+    *1/31 match not added due to incomplete data on maps<br>		
+    *2/19 match not added due to incomplete data		
   </div>
 </div>
 
@@ -326,8 +324,12 @@ function updateH2HChart() {
     const p1 = getLatest(name1);
     const p2 = getLatest(name2);
 
-    // Normalizing kills where 30 is the visual maximum (100% on chart)
-    const normalizeKills = (kills) => (Math.min(kills, 30) / 30) * 100;
+    // Normalization Logic:
+    // We treat 30 kills as "100%" on the chart.
+    const normalizeKills = (kills) => {
+        const maxKills = 30;
+        return (Math.min(kills, maxKills) / maxKills) * 100;
+    };
 
     const ctx = document.getElementById('h2hRadarChart').getContext('2d');
     if (h2hChartInstance) h2hChartInstance.destroy();
@@ -362,7 +364,9 @@ function updateH2HChart() {
                 r: {
                     beginAtZero: true,
                     suggestedMax: 100,
-                    ticks: { display: false },
+                    ticks: { 
+                        display: false // Hiding ticks because the categories have different units
+                    },
                     grid: { color: 'rgba(0,0,0,0.1)' },
                     pointLabels: { font: { size: 12, weight: 'bold' }, color: '#2c3e50' }
                 }
@@ -371,10 +375,12 @@ function updateH2HChart() {
                 legend: { position: 'top', labels: { boxWidth: 20, font: { size: 14 } } },
                 tooltip: {
                     callbacks: {
+                        // This ensures the tooltip shows the ACTUAL kill count, not the 0-100 normalized value
                         label: function(context) {
                             let label = context.dataset.label || '';
                             let value = context.raw;
-                            if (context.label.includes('Avg Kills')) {
+                            if (context.label === 'Avg Kills (Scale 0-30)') {
+                                // Reverse the normalization for the tooltip display
                                 value = Math.round((value / 100) * 30);
                             } else {
                                 value = Math.round(value) + '%';
@@ -427,9 +433,7 @@ fetch("R63 Data.xlsx?v=" + new Date().getTime())
   .then(res => res.arrayBuffer())
   .then(data => {
     const workbook = XLSX.read(data, { type: "array" });
-
-    // --- LOAD BA HISTORY ---
-    const histSheet = workbook.Sheets["BA History"];
+    const histSheet = workbook.Sheets["OB History S2"];
     if (histSheet) {
         const histJson = XLSX.utils.sheet_to_json(histSheet);
         histJson.forEach(row => {
@@ -445,8 +449,7 @@ fetch("R63 Data.xlsx?v=" + new Date().getTime())
         });
     }
 
-    // --- LOAD BA v2 TABLE ---
-    const sheet = workbook.Sheets["BA v2"];
+    const sheet = workbook.Sheets["OB Season 2"];
     const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
     const headers = json[0];
     const rows = json.slice(1);

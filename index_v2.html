@@ -212,6 +212,7 @@
 <div class="tabs" style="margin-bottom: 20px;">
   <a href="index.html"><button>All Time Leaderboard</button></a>
   <a href="index_v2.html"><button class="active-btn">Season 2</button></a>
+  <a href="OB_tourney_stats.html"><button>Tourney Stats</button></a>
 </div>
 
 <div class="comments-container" style="border-top: 5px solid #3498db;">
@@ -327,9 +328,9 @@ function updateH2HChart() {
     const p2 = getLatest(name2);
 
     // Normalization Logic:
-    // We treat 30 kills as "100%" on the chart.
+    // We treat 40 kills as "100%" on the chart.
     const normalizeKills = (kills) => {
-        const maxKills = 30;
+        const maxKills = 40;
         return (Math.min(kills, maxKills) / maxKills) * 100;
     };
 
@@ -339,7 +340,7 @@ function updateH2HChart() {
     h2hChartInstance = new Chart(ctx, {
         type: 'radar',
         data: {
-            labels: ['Avg Kills (Scale 0-30)', 'Map Win %', 'Round Win %', 'Match Win %'],
+            labels: ['Avg Kills (Scale 0-40)', 'Map Win %', 'Round Win %', 'Match Win %'],
             datasets: [
                 {
                     label: name1,
@@ -381,9 +382,9 @@ function updateH2HChart() {
                         label: function(context) {
                             let label = context.dataset.label || '';
                             let value = context.raw;
-                            if (context.label === 'Avg Kills (Scale 0-30)') {
+                            if (context.label === 'Avg Kills (Scale 0-40)') {
                                 // Reverse the normalization for the tooltip display
-                                value = Math.round((value / 100) * 30);
+                                value = Math.round((value / 100) * 40);
                             } else {
                                 value = Math.round(value) + '%';
                             }

@@ -47,7 +47,7 @@
   }
 
   button:hover { background: #e9ecef; }
-  .active-btn { background: #3498db !important; color: white !important; border-color: #2980b9 !important; }
+ .active-btn { background: #3498db !important; color: white !important; border-color: #2980b9 !important; }
 
   #clearFilters { 
     background: #e74c3c; 
@@ -208,10 +208,11 @@
   <span>📅 Date Last Updated:</span>
   <span class="date-badge">April 6th 2026</span>
 </div>
+
 <div class="tabs" style="margin-bottom: 20px;">
-  <a href="index.html"><button class="active-btn">All Time Leaderboard</button></a>
+  <a href="index.html"><button>All Time Leaderboard</button></a>
   <a href="index_v2.html"><button>Season 2</button></a>
-  <a href="OB_tourney_stats.html"><button>Tourney Stats</button></a>
+  <a href="OB_tourney_stats.html"><button class="active-btn">Tourney Stats</button></a>
 </div>
 
 <div class="comments-container" style="border-top: 5px solid #3498db;">
@@ -245,8 +246,7 @@
 <div class="comments-container">
   <h3>📝 General Match Comments</h3>
   <div id="matchComments">
-    *1/31 match not added due to incomplete data on maps<br>		
-    *2/19 match not added due to incomplete data		
+    Stats include all cash tournament matches as well as the Old Bow vs. Black Arrow grudge match.	
   </div>
 </div>
 
@@ -327,9 +327,9 @@ function updateH2HChart() {
     const p2 = getLatest(name2);
 
     // Normalization Logic:
-    // We treat 30 kills as "100%" on the chart.
+    // We treat 40 kills as "100%" on the chart.
     const normalizeKills = (kills) => {
-        const maxKills = 30;
+        const maxKills = 40;
         return (Math.min(kills, maxKills) / maxKills) * 100;
     };
 
@@ -339,7 +339,7 @@ function updateH2HChart() {
     h2hChartInstance = new Chart(ctx, {
         type: 'radar',
         data: {
-            labels: ['Avg Kills (Scale 0-30)', 'Map Win %', 'Round Win %', 'Match Win %'],
+            labels: ['Avg Kills (Scale 0-40)', 'Map Win %', 'Round Win %', 'Match Win %'],
             datasets: [
                 {
                     label: name1,
@@ -381,9 +381,9 @@ function updateH2HChart() {
                         label: function(context) {
                             let label = context.dataset.label || '';
                             let value = context.raw;
-                            if (context.label === 'Avg Kills (Scale 0-30)') {
+                            if (context.label === 'Avg Kills (Scale 0-40)') {
                                 // Reverse the normalization for the tooltip display
-                                value = Math.round((value / 100) * 30);
+                                value = Math.round((value / 100) * 40);
                             } else {
                                 value = Math.round(value) + '%';
                             }
@@ -435,7 +435,7 @@ fetch("R63 Data.xlsx?v=" + new Date().getTime())
   .then(res => res.arrayBuffer())
   .then(data => {
     const workbook = XLSX.read(data, { type: "array" });
-    const histSheet = workbook.Sheets["OB History"];
+    const histSheet = workbook.Sheets["Tourney History"];
     if (histSheet) {
         const histJson = XLSX.utils.sheet_to_json(histSheet);
         histJson.forEach(row => {
@@ -451,7 +451,7 @@ fetch("R63 Data.xlsx?v=" + new Date().getTime())
         });
     }
 
-    const sheet = workbook.Sheets["Old Bow v2"];
+    const sheet = workbook.Sheets["Tourney Stats"];
     const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
     const headers = json[0];
     const rows = json.slice(1);

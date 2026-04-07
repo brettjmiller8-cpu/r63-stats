@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Rainbow Six 3 Stats Tracker</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+<style>
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f8f9fa; color: #2c3e50; }
+  .header-box { background: #2c3e50; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+  .nav-buttons { margin-bottom: 20px; }
+  button { padding: 8px 16px; border-radius: 6px; border: 1px solid #dee2e6; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s; color: #2c3e50; margin-right: 5px; }
+  button:hover { background: #e9ecef; }
+  .active-btn { background: #3498db !important; color: white !important; border-color: #2980b9 !important; }
+  
+  .balancer-container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 5px solid #9b59b6; margin-bottom: 20px; }
+  .team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-top: 20px; }
+  .team-card { padding: 20px; border-radius: 10px; border: 1px solid #dee2e6; min-height: 200px; }
+  .green-team { background: #ebfbee; border-left: 6px solid #27ae60; }
+  .red-team { background: #fff5f5; border-left: 6px solid #e74c3c; }
+  .team-title { font-size: 1.4rem; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; }
+  
+  .player-item { padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-between; }
+  .controls { background: #f1f3f5; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 15px; align-items: center; justify-content: center; }
+  .hidden { display: none; }
+  .player-check { width: 18px; height: 18px; cursor: pointer; }
+  .dt-center { text-align: center; }
+</style>
+</head>
+
+<body>
+
+<div class="header-box">
+  <h2 style="margin:0;">Team Balancer</h2>
+  <button onclick="generateTeams()" style="background: #9b59b6; color: white; border: none; padding: 10px 20px; font-size: 1rem;">Generate Balanced Teams</button>
+</div>
+
+<div class="nav-buttons">
+  <a href="index.html"><button>Old Bow Stats</button></a>
+  <a href="OB_MA.html"><button>Old Bow Match Analyzer</button></a>
+  <a href="BA.html"><button>Black Arrow Stats</button></a>
+  <a href="BA_MA.html"><button>Black Arrow Match Analyzer</button></a>
+  <a href="Tournament_Champs.html"><button>Tournament Champs</button></a>
+  <a href="Match_submission.html"><button>Match Submission</button></a>
+  <button class="active-btn">Team Balancer</button>
+</div>
+
+<div class="controls">
+    <strong>1. Select Game:</strong>
+    <button id="btnOB" class="active-btn" onclick="switchData('Old Bow v2', 'btnOB')">Old Bow</button>
+    <button id="btnBA" onclick="switchData('BA v2', 'btnBA')">Black Arrow</button>
+</div>
+
+<div id="resultArea" class="balancer-container hidden">
+    <div class="team-grid">
+        <div class="team-card green-team">
+            <div class="team-title"><span>Green Team</span> <span id="t1Sum">0</span></div>
+            <div id="t1List"></div>
+        </div>
+        <div class="team-card red-team">
+            <div class="team-title"><span>Red Team</span> <span id="t2Sum">0</span></div>
+            <div id="t2List"></div>
+        </div>
+    </div>
+    <div style="text-align: center; margin-top: 15px; font-weight: bold; color: #7f8c8d;" id="diffDisplay"></div>
+</div>
+
+<div class="balancer-container" style="border-top-color: #2c3e50;">
+    <h3 style="margin-top:0;">2. Check Available Players</h3>
+    <div style="margin-bottom: 15px;">
+        <button onclick="toggleAll(true)" style="padding: 4px 10px; font-size: 0.8rem;">Select All</button>
+        <button onclick="toggleAll(false)" style="padding: 4px 10px; font-size: 0.8rem;">Deselect All</button>
+    </div>
+    <table id="poolTable" class="display" style="width:100%">
+        <thead>
+            <tr>
+                <th style="width: 40px;">Select</th>
+                <th>Player</th>
+                <th>Avg. Kills</th>
+                <th>Match Win %</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<script>
+let workbook;
+let table;
+
+function toggleAll(checked) {
+    $('.player-check').prop('checked', checked);
+}
+
+function switchData(sheetName, btnId) {
+    $('.controls button').removeClass('active-btn');
+    $(`#${btnId}`).addClass('active-btn');
+    
+    const sheet = workbook.Sheets[sheetName];
+    if (!sheet) {
+        alert("Sheet not found!");
+        return;
+    }
+
+    const json = XLSX.utils.sheet_to_json(sheet, {header: 1});
+    
+    // Define the specific indexes for each sheet
+    // Old Bow v2: Avg Kills = 4, Match % = 8
+    // BA v2: Avg Kills = 3 (or 4), Match % = 7
+    let killsIdx, matchIdx;
+
+    if (sheetName === 'BA v2') {
+        killsIdx = 3;
+        matchIdx = 7;
+    } else {
+        // Default to Old Bow indexes
+        killsIdx = 4;
+        matchIdx = 8;
+    }
+
+    const data = json.slice(1).filter(r => r[0]).map(r => {
+        const name = r[0];
+        const avgKills = Number(r[killsIdx] || 0).toFixed(1);
+        
+        let matchVal = Number(r[matchIdx] || 0);
+        let matchDisplay;
+        
+        // Safety check for percentage formatting
+        if (matchVal > 0 && matchVal <= 1) {
+            matchDisplay = Math.round(matchVal * 100) + "%";
+        } else {
+            matchDisplay = Math.round(matchVal) + "%";
+        }
+
+        return [name, avgKills, matchDisplay];
+    });
+
+    table.clear().rows.add(data).draw();
+}
+
+async function init() {
+    const res = await fetch("R63 Data.xlsx?v=" + new Date().getTime());
+    const ab = await res.arrayBuffer();
+    workbook = XLSX.read(ab, {type: "array"});
+    
+    // Initialize empty table first
+    table = $('#poolTable').DataTable({
+        paging: false,
+        info: false,
+        order: [[2, 'desc']],
+        columns: [
+            { 
+                data: null, 
+                render: () => '<input type="checkbox" class="player-check">',
+                orderable: false 
+            },
+            { data: 0 },
+            { data: 1 },
+            { data: 2 }
+        ],
+        columnDefs: [{ className: "dt-center", targets: "_all" }]
+    });
+
+    // Default to Old Bow
+    switchData('Old Bow v2', 'btnOB');
+}
+
+function generateTeams() {
+    const selected = [];
+    table.rows().every(function() {
+        const rowNode = this.node();
+        if ($(rowNode).find('.player-check').prop('checked')) {
+            const d = this.data();
+            selected.push({ name: d[0], power: parseFloat(d[1]) });
+        }
+    });
+
+    if (selected.length < 2) return alert("Select at least 2 players!");
+
+    selected.sort((a, b) => b.power - a.power);
+
+    let t1 = [], t2 = [], s1 = 0, s2 = 0;
+    selected.forEach(p => {
+        if (s1 <= s2) { t1.push(p); s1 += p.power; }
+        else { t2.push(p); s2 += p.power; }
+    });
+
+    const renderList = (list) => list.map(p => `
+        <div class="player-item">
+            <span>${p.name}</span> 
+            <span style="color:#7f8c8d; font-size:0.9rem;">${p.power}</span>
+        </div>`).join('');
+    
+    $('#t1List').html(renderList(t1));
+    $('#t2List').html(renderList(t2));
+    $('#t1Sum').text(s1.toFixed(1));
+    $('#t2Sum').text(s2.toFixed(1));
+    $('#diffDisplay').text("Total Strength Difference: " + Math.abs(s1 - s2).toFixed(1));
+    $('#resultArea').removeClass('hidden');
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+$(document).ready(init);
+</script>
+</body>
+</html>

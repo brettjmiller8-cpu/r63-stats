@@ -185,6 +185,36 @@
     box-sizing: border-box;
     background-color: #fcfcfc;
   }
+
+    .legend-container {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 20px;
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: 1px solid #dee2e6;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.legend-icon {
+    font-size: 1.2rem;
+}
+
+.legend-text {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
 </style>
 </head>
 
@@ -240,7 +270,19 @@
     <tbody></tbody>
   </table>
 </div>
-
+<div class="legend-container">
+    <div class="legend-item">
+        <span class="legend-icon">🏆</span>
+        <span class="legend-text">Tournament Win</span>
+    </div>
+    <div class="legend-item">
+        <span class="legend-icon">👑</span>
+        <span class="legend-text">Match MVP</span>
+    </div>
+    <div class="legend-item">
+        <span class="legend-icon">🏅</span> <span class="legend-text">Special Match Win</span>
+    </div>
+</div>
 <div class="comments-container">
   <h3>📝 General Match Comments</h3>
   <div id="matchComments">

@@ -236,7 +236,7 @@
 
 <div class="last-updated-container">
   <span>📅 Date Last Updated:</span>
-  <span class="date-badge">April 6th 2026</span>
+  <span class="date-badge"></span>
 </div>
 <div class="tabs" style="margin-bottom: 20px;">
   <a href="BA.html"><button>All Time Leaderboard</button></a>
@@ -328,6 +328,29 @@
 let globalHistory = {}; 
 let activeCharts = [];
 let h2hChartInstance = null;
+
+function formatDateToLongString(excelDate) {
+    // Using UTC methods prevents the "one day off" timezone shift
+    const d = new Date(Math.round((excelDate - 25569) * 86400 * 1000));
+    
+    const months = [
+        "January", "February", "March", "April", "May", "June", 
+        "July", "August", "September", "October", "November", "December"
+    ];
+    
+    // Use getUTCDate() instead of getDate() to ignore local timezone
+    const day = d.getUTCDate();
+    const month = months[d.getUTCMonth()];
+    const year = d.getUTCFullYear();
+    
+    // Determine the suffix (st, nd, rd, or th)
+    let suffix = "th";
+    if (day % 10 === 1 && day !== 11) suffix = "st";
+    else if (day % 10 === 2 && day !== 12) suffix = "nd";
+    else if (day % 10 === 3 && day !== 13) suffix = "rd";
+    
+    return `${month} ${day}${suffix} ${year}`;
+}
 
 function closeModal() {
   document.getElementById("statsModal").style.display = "none";
@@ -470,22 +493,35 @@ fetch("R63 Data.xlsx?v=" + new Date().getTime())
   .then(res => res.arrayBuffer())
   .then(data => {
     const workbook = XLSX.read(data, { type: "array" });
+    const histSheet = workbook.Sheets["OB History"];
+    let latestExcelDate = 0; // Variable to track the newest date
 
-    // --- LOAD BA HISTORY ---
-    const histSheet = workbook.Sheets["BA History S2"];
     if (histSheet) {
         const histJson = XLSX.utils.sheet_to_json(histSheet);
         histJson.forEach(row => {
+            const rawDate = row["Date"];
+            
+            // Check if this date is newer than the one we've stored
+            if (rawDate > latestExcelDate) {
+                latestExcelDate = rawDate;
+            }
+
             const p = row["Player"];
             if (!globalHistory[p]) globalHistory[p] = [];
             globalHistory[p].push({
-                date: formatExcelDate(row["Date"]),
+                date: formatExcelDate(rawDate),
                 kills: row["Overall Avg Kills"] || 0,
                 maps: row["Running Avg. Maps"] || 0,
                 rounds: row["R Avg Rounds"] || 0,
                 matches: row["Running Avg. Matches"] || 0
             });
         });
+    }
+
+    // UPDATE THE DATE BADGE IN THE HTML
+    if (latestExcelDate > 0) {
+        const formattedDate = formatDateToLongString(latestExcelDate);
+        $(".date-badge").text(formattedDate);
     }
 
     // --- LOAD BA v2 TABLE ---

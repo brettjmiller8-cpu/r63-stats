@@ -110,37 +110,29 @@ function switchData(sheetName, btnId) {
     }
 
     const json = XLSX.utils.sheet_to_json(sheet, {header: 1});
-    
-    // Define the specific indexes for each sheet
-    // Old Bow v2: Avg Kills = 4, Match % = 8
-    // BA v2: Avg Kills = 3 (or 4), Match % = 7
-    let killsIdx, matchIdx;
+    const headers = json[0]; // Get the header row
 
-    if (sheetName === 'BA v2') {
-        killsIdx = 5;
-        matchIdx = 9;
+    // Find the correct indexes dynamically based on the header names
+    const killsIdx = headers.findIndex(h => h && (h === "Avg. Kills" || h.toLowerCase().includes("avg. kills")));
+const matchIdx = headers.findIndex(h => h && (h === "Match %" || h.toLowerCase().includes("win %")));
+
+const data = json.slice(1).filter(r => r[0]).map(r => {
+    const name = r[0];
+    const avgKills = Number(r[killsIdx] || 0).toFixed(1);
+    
+    // Ensure we are pulling the decimal value (e.g., 0.65) and converting to 65%
+    let matchVal = Number(r[matchIdx] || 0);
+    let matchDisplay;
+    
+    // This logic handles both decimal (0.75) and whole number (75) formats
+    if (matchVal > 0 && matchVal <= 1) {
+        matchDisplay = Math.round(matchVal * 100) + "%";
     } else {
-        // Default to Old Bow indexes
-        killsIdx = 6;
-        matchIdx = 10;
+        matchDisplay = Math.round(matchVal) + "%";
     }
 
-    const data = json.slice(1).filter(r => r[0]).map(r => {
-        const name = r[0];
-        const avgKills = Number(r[killsIdx] || 0).toFixed(1);
-        
-        let matchVal = Number(r[matchIdx] || 0);
-        let matchDisplay;
-        
-        // Safety check for percentage formatting
-        if (matchVal > 0 && matchVal <= 1) {
-            matchDisplay = Math.round(matchVal * 100) + "%";
-        } else {
-            matchDisplay = Math.round(matchVal) + "%";
-        }
-
-        return [name, avgKills, matchDisplay];
-    });
+    return [name, avgKills, matchDisplay];
+});
 
     table.clear().rows.add(data).draw();
 }

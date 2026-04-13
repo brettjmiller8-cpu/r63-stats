@@ -85,11 +85,7 @@
 <div class="comments-container">
   <h3>📝 General Match Comments</h3>
   <div id="matchComments">
-    *2/22/26 match not included, Tony fell asleep<br>
-    *2/28/26 match did not have kills for both teams<br>
-    *3/2/26 match no kills for Focus, Choi, Broken, Tail, Kyle, Hopes, FlyinRyan<br>
-    *3/5/26 match #2 DNF, stats not included <br>
-    *3/28/26 Team 2 kills not included, match data incomplete<br>
+   None
   </div>
 </div>
 
@@ -447,7 +443,17 @@ $("#hotStreakContainer").html(`
       columns: [
         { data: null, defaultContent: "", className: "index-column" },
         ...headers.map((h, i) => {
-          const clean = h.toLowerCase();
+                   const clean = h.toLowerCase();
+if (clean.includes("description")) return { data: i, visible: false };
+if (clean === "player") return { data: i, render: (d) => `<span class="player-link" onclick="showPlayerStats('${d}')">${d}</span>` };
+
+// ADD THIS SECTION FOR THE NEW PIECE COLUMNS
+if (clean === "4 piece" || clean === "5 piece" || clean === "6 piece") {
+    return { 
+        data: i, 
+        render: (d) => d ? d : 0 // Displays 0 if the Excel cell is empty
+    };
+}
           if (clean.includes("description")) return { data: i, visible: false };
           if (clean === "player") return { data: i, render: (d) => `<span class="player-link" onclick="showPlayerStats('${d}')">${d}</span>` };
           if (clean === "avg. kills") return { data: i, render: (d) => isNaN(parseFloat(d)) ? d : Math.round(parseFloat(d)) };

@@ -447,7 +447,17 @@ $("#hotStreakContainer").html(`
       columns: [
         { data: null, defaultContent: "", className: "index-column" },
         ...headers.map((h, i) => {
-          const clean = h.toLowerCase();
+         const clean = h.toLowerCase();
+if (clean.includes("description")) return { data: i, visible: false };
+if (clean === "player") return { data: i, render: (d) => `<span class="player-link" onclick="showPlayerStats('${d}')">${d}</span>` };
+
+// ADD THIS SECTION FOR THE NEW PIECE COLUMNS
+if (clean === "4 piece" || clean === "5 piece" || clean === "6 piece") {
+    return { 
+        data: i, 
+        render: (d) => d ? d : 0 // Displays 0 if the Excel cell is empty
+    };
+}
           if (clean.includes("description")) return { data: i, visible: false };
           if (clean === "player") return { data: i, render: (d) => `<span class="player-link" onclick="showPlayerStats('${d}')">${d}</span>` };
           if (clean === "avg. kills") return { data: i, render: (d) => isNaN(parseFloat(d)) ? d : Math.round(parseFloat(d)) };

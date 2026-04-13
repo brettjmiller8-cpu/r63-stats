@@ -117,12 +117,12 @@ function switchData(sheetName, btnId) {
     let killsIdx, matchIdx;
 
     if (sheetName === 'BA v2') {
-        killsIdx = 3;
-        matchIdx = 7;
+        killsIdx = 5;
+        matchIdx = 9;
     } else {
         // Default to Old Bow indexes
-        killsIdx = 4;
-        matchIdx = 8;
+        killsIdx = 6;
+        matchIdx = 10;
     }
 
     const data = json.slice(1).filter(r => r[0]).map(r => {

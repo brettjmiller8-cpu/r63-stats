@@ -10,211 +10,8 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/3.4.0/css/fixedHeader.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.min.css">
+<link rel="stylesheet" href="style.css?v=1.0">
 
-<style>
-  /* ===============================
-     BASE STYLE
-     =============================== */
-  body { 
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-    margin: 20px; 
-    background-color: #f8f9fa; 
-    color: #2c3e50; 
-  }
-
-  .header-box { 
-    background: #2c3e50; 
-    color: white; 
-    padding: 20px; 
-    border-radius: 8px; 
-    margin-bottom: 20px; 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-  }
-
-  .nav-buttons { margin-bottom: 20px; }
-  
-  button {
-    padding: 8px 16px;
-    border-radius: 6px;
-    border: 1px solid #dee2e6;
-    background: white;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.2s;
-    color: #2c3e50;
-  }
-
-  button:hover { background: #e9ecef; }
- .active-btn { background: #3498db !important; color: white !important; border-color: #2980b9 !important; }
-
-  #clearFilters { 
-    background: #e74c3c; 
-    color: white; 
-    border: none; 
-    margin-bottom: 15px;
-  }
-  
-  #clearFilters:hover { background: #c0392b; }
-
-  .stats-container {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    border-top: 5px solid #2c3e50;
-  }
-
-  table.dataTable thead th {
-    background: #f1f3f5 !important;
-    color: #2c3e50;
-    font-weight: bold;
-    border: 1px solid #dee2e6 !important;
-    text-align: center !important;
-  }
-
-  table.dataTable tbody td {
-    border: 1px solid #dee2e6 !important;
-    text-align: center !important;
-    padding: 10px !important;
-  }
-
-  .player-link {
-    color: #3498db;
-    text-decoration: underline;
-    cursor: pointer;
-    font-weight: bold;
-  }
-  .player-link:hover { color: #2980b9; }
-
-  /* Modal Styling */
-  .modal {
-    display: none;
-    position: fixed;
-    z-index: 9999;
-    left: 0; top: 0;
-    width: 100%; height: 100%;
-    background-color: rgba(0,0,0,0.6);
-    backdrop-filter: blur(3px);
-  }
-  .modal-content {
-    background-color: white;
-    margin: 2% auto;
-    padding: 25px;
-    border-radius: 12px;
-    width: 85%;
-    max-width: 900px;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  }
-  .close-btn {
-    position: absolute;
-    right: 20px;
-    top: 15px;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-    color: #95a5a6;
-  }
-
-  .chart-container {
-    margin-bottom: 40px;
-    padding: 15px;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    height: 300px;
-  }
-
-  .column-filter { width: 90%; padding: 4px; border-radius: 4px; border: 1px solid #ced4da; font-size: 12px; }
-  .index-column { color: #7f8c8d; font-weight: bold; }
-
-  .last-updated-container { margin-bottom: 15px; font-size: 0.9rem; color: #7f8c8d; display: flex; align-items: center; gap: 8px; }
-  .date-badge { background: #e9ecef; padding: 4px 12px; border-radius: 20px; font-weight: bold; color: #2c3e50; border: 1px solid #dee2e6; }
-
-  .comments-container {
-    margin-top: 30px;
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    border-top: 5px solid #7f8c8d;
-    margin-bottom: 20px;
-  }
-
-  .comments-container h3 {
-    margin-top: 0;
-    font-size: 1.1rem;
-    color: #2c3e50;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  #matchComments {
-    width: 100%;
-    min-height: 120px;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid #ced4da;
-    font-family: inherit;
-    font-size: 0.95rem;
-    resize: vertical;
-    box-sizing: border-box;
-    background-color: #fcfcfc;
-  }
-
-  /* H2H Specific Styles */
-  .h2h-controls {
-    display: flex;
-    gap: 20px;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-    background: #f1f3f5;
-    padding: 15px;
-    border-radius: 8px;
-  }
-
-  .h2h-select {
-    padding: 6px;
-    border-radius: 4px;
-    border: 1px solid #ced4da;
-    min-width: 150px;
-  }
-
-    .legend-container {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    margin-top: 20px;
-    padding: 15px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    border: 1px solid #dee2e6;
-}
-
-.legend-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.legend-icon {
-    font-size: 1.2rem;
-}
-
-.legend-text {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #7f8c8d;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-</style>
 </head>
 
 <body>
@@ -238,6 +35,8 @@
   <span>📅 Date Last Updated:</span>
   <span class="date-badge"></span>
 </div>
+
+<div id="hotStreakContainer" class="streak-container"></div>
 
 <div class="tabs" style="margin-bottom: 20px;">
   <a href="index.html"><button>All Time Leaderboard</button></a>
@@ -288,8 +87,7 @@
 <div class="comments-container">
   <h3>📝 General Match Comments</h3>
   <div id="matchComments">
-    *1/31 match not added due to incomplete data on maps<br>		
-    *2/19 match not added due to incomplete data		
+    None
   </div>
 </div>
 
@@ -329,6 +127,8 @@ let globalHistory = {};
 let activeCharts = [];
 let h2hChartInstance = null;
 
+function closeModal() { document.getElementById("statsModal").style.display = "none"; }
+
 function formatDateToLongString(excelDate) {
     // Using UTC methods prevents the "one day off" timezone shift
     const d = new Date(Math.round((excelDate - 25569) * 86400 * 1000));
@@ -352,10 +152,6 @@ function formatDateToLongString(excelDate) {
     return `${month} ${day}${suffix} ${year}`;
 }
 
-function closeModal() {
-  document.getElementById("statsModal").style.display = "none";
-}
-
 function formatExcelDate(val) {
     if (typeof val === 'number') {
         const date = new Date((val - 25569) * 86400 * 1000);
@@ -367,7 +163,6 @@ function formatExcelDate(val) {
     return val;
 }
 
-// H2H Logic
 function initH2HOptions() {
     const p1Select = document.getElementById('h2hPlayer1');
     const p2Select = document.getElementById('h2hPlayer2');
@@ -380,86 +175,6 @@ function initH2HOptions() {
 
     if (p2Select.options.length > 1) p2Select.selectedIndex = 1;
     updateH2HChart();
-}
-
-function updateH2HChart() {
-    const name1 = document.getElementById('h2hPlayer1').value;
-    const name2 = document.getElementById('h2hPlayer2').value;
-
-    if (!globalHistory[name1] || !globalHistory[name2]) return;
-
-    const getLatest = (name) => globalHistory[name][globalHistory[name].length - 1];
-    const p1 = getLatest(name1);
-    const p2 = getLatest(name2);
-
-    // Normalization Logic:
-    // We treat 40 kills as "100%" on the chart.
-    const normalizeKills = (kills) => {
-        const maxKills = 40;
-        return (Math.min(kills, maxKills) / maxKills) * 100;
-    };
-
-    const ctx = document.getElementById('h2hRadarChart').getContext('2d');
-    if (h2hChartInstance) h2hChartInstance.destroy();
-
-    h2hChartInstance = new Chart(ctx, {
-        type: 'radar',
-        data: {
-            labels: ['Avg Kills (Scale 0-40)', 'Map Win %', 'Round Win %', 'Match Win %'],
-            datasets: [
-                {
-                    label: name1,
-                    data: [normalizeKills(p1.kills), p1.maps * 100, p1.rounds * 100, p1.matches * 100],
-                    backgroundColor: 'rgba(52, 152, 219, 0.2)',
-                    borderColor: '#3498db',
-                    pointBackgroundColor: '#3498db',
-                    borderWidth: 3
-                },
-                {
-                    label: name2,
-                    data: [normalizeKills(p2.kills), p2.maps * 100, p2.rounds * 100, p2.matches * 100],
-                    backgroundColor: 'rgba(231, 76, 60, 0.2)',
-                    borderColor: '#e74c3c',
-                    pointBackgroundColor: '#e74c3c',
-                    borderWidth: 3
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                r: {
-                    beginAtZero: true,
-                    suggestedMax: 100,
-                    ticks: { 
-                        display: false // Hiding ticks because the categories have different units
-                    },
-                    grid: { color: 'rgba(0,0,0,0.1)' },
-                    pointLabels: { font: { size: 12, weight: 'bold' }, color: '#2c3e50' }
-                }
-            },
-            plugins: { 
-                legend: { position: 'top', labels: { boxWidth: 20, font: { size: 14 } } },
-                tooltip: {
-                    callbacks: {
-                        // This ensures the tooltip shows the ACTUAL kill count, not the 0-100 normalized value
-                        label: function(context) {
-                            let label = context.dataset.label || '';
-                            let value = context.raw;
-                            if (context.label === 'Avg Kills (Scale 0-40)') {
-                                // Reverse the normalization for the tooltip display
-                                value = Math.round((value / 100) * 40);
-                            } else {
-                                value = Math.round(value) + '%';
-                            }
-                            return label + ': ' + value;
-                        }
-                    }
-                }
-            }
-        }
-    });
 }
 
 function showPlayerStats(playerName) {
@@ -497,94 +212,272 @@ function showPlayerStats(playerName) {
   }));
 }
 
+function updateH2HChart() {
+    const n1 = document.getElementById('h2hPlayer1').value;
+    const n2 = document.getElementById('h2hPlayer2').value;
+    if (!globalHistory[n1] || !globalHistory[n2]) return;
+
+    const p1 = globalHistory[n1][globalHistory[n1].length - 1];
+    const p2 = globalHistory[n2][globalHistory[n2].length - 1];
+
+    const fixPct = (val) => (val <= 1 ? val * 100 : val);
+    const normKills = (v) => (Math.min(v, 40) / 40) * 100;
+
+    if (h2hChartInstance) h2hChartInstance.destroy();
+    
+    const ctx = document.getElementById('h2hRadarChart').getContext('2d');
+    h2hChartInstance = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            // These act as your Axis Labels at each point of the radar
+            labels: [
+                'Average Kills', 
+                'Map Win %', 
+                'Round Win %', 
+                'Match Win %'
+            ],
+            datasets: [
+                { 
+                    label: n1, 
+                    data: [normKills(p1.kills), fixPct(p1.maps), fixPct(p1.rounds), fixPct(p1.matches)], 
+                    borderColor: '#3498db', 
+                    backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                    pointBackgroundColor: '#3498db',
+                    borderWidth: 3
+                },
+                { 
+                    label: n2, 
+                    data: [normKills(p2.kills), fixPct(p2.maps), fixPct(p2.rounds), fixPct(p2.matches)], 
+                    borderColor: '#e74c3c', 
+                    backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                    pointBackgroundColor: '#e74c3c',
+                    borderWidth: 3
+                }
+            ]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    min: 0,
+                    max: 100,
+                    beginAtZero: true,
+                    ticks: {
+                        display: false, // Hides the numbers (0, 20, 40...) on the web lines
+                        stepSize: 20
+                    },
+                    // Styling for the labels at the points of the radar
+                    pointLabels: {
+                        display: true,
+                        font: {
+                            size: 14,
+                            weight: 'bold',
+                            family: "'Segoe UI', sans-serif"
+                        },
+                        color: '#2c3e50',
+                        padding: 10
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    },
+                    angleLines: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        boxWidth: 20,
+                        font: { size: 13, weight: '600' }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            let value = context.raw;
+                            if (context.dataIndex === 0) {
+                                let realKills = (value / 100) * 40;
+                                return label + ": " + realKills.toFixed(1) + " Kills";
+                            } else {
+                                return label + ": " + Math.round(value) + "%";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+
+
 fetch("R63 Data.xlsx?v=" + new Date().getTime())
   .then(res => res.arrayBuffer())
   .then(data => {
     const workbook = XLSX.read(data, { type: "array" });
-// 1. Process History (Charts & Last Updated Date)
     const histSheet = workbook.Sheets["OB History S2"];
-    let latestExcelDate = 0; // Variable to track the newest date
+    let latestExcelDate = 0;
 
     if (histSheet) {
-        const histJson = XLSX.utils.sheet_to_json(histSheet);
-        histJson.forEach(row => {
+        XLSX.utils.sheet_to_json(histSheet).forEach(row => {
             const rawDate = row["Date"];
-            
-            // Check if this date is newer than the one we've stored
-            if (rawDate > latestExcelDate) {
-                latestExcelDate = rawDate;
-            }
-
+            if (rawDate > latestExcelDate) latestExcelDate = rawDate;
             const p = row["Player"];
             if (!globalHistory[p]) globalHistory[p] = [];
-            globalHistory[p].push({
-                date: formatExcelDate(rawDate),
-                kills: row["Overall Avg Kills"] || 0,
-                maps: row["Running Avg. Maps"] || 0,
-                rounds: row["R Avg Rounds"] || 0,
-                matches: row["Running Avg. Matches"] || 0
-            });
+            globalHistory[p].push({ 
+  rawDate: rawDate, 
+    date: formatDateToLongString(rawDate), 
+    kills: row["Overall Avg Kills"] || 0, 
+    singleKills: row["Kills"] || 0,
+    maps: row["Running Avg. Maps"] || 0, 
+    rounds: row["R Avg Rounds"] || 0, 
+    // Ensure this matches the EXACT header in your "OB History" sheet
+    matches: row["Running Avg. Matches"] || 0 
+});
         });
     }
 
-    // UPDATE THE DATE BADGE IN THE HTML
-    if (latestExcelDate > 0) {
-        const formattedDate = formatDateToLongString(latestExcelDate);
-        $(".date-badge").text(formattedDate);
-    }
+    if (latestExcelDate > 0) $(".date-badge").text(formatDateToLongString(latestExcelDate));
 
-    const sheet = workbook.Sheets["OB Season 2"];
+// --- Corrected Hot Streaks Logic: Strict 14-Day 3-Match Minimum ---
+const fourteenDaysAgo = latestExcelDate - 14;
+const WINDOW_MIN_MATCHES = 3; // Specifically for the last 14 days
+
+let streaks = { 
+    topK: { p: "None", v: 0 }, 
+    impK: { p: "None", v: -99 },
+    active: { p: "None", v: 0 },
+    clutch: { p: "None", v: 0 } 
+};
+
+Object.keys(globalHistory).forEach(name => {
+    const fullHistory = globalHistory[name];
+    // Filter for matches ONLY within the last 14 days
+    const recentMatches = fullHistory.filter(h => h.rawDate >= fourteenDaysAgo);
+    
+    // Only proceed if they are active (at least 1 game in 14 days)
+    if (recentMatches.length > 0) {
+        
+        // 1. High Game (Single best performance, no minimum games required)
+        recentMatches.forEach(match => {
+            if (match.singleKills > streaks.topK.v) {
+                streaks.topK = { p: name, v: match.singleKills };
+            }
+        });
+
+        // 2. Most Active (Workhorse)
+        if (recentMatches.length > streaks.active.v) {
+            streaks.active = { p: name, v: recentMatches.length };
+        }
+
+        // --- STRICT 3-MATCH MINIMUM FOR AVERAGES ---
+        if (recentMatches.length >= WINDOW_MIN_MATCHES) {
+            
+            // 3. Kill Surge Calculation
+            const currentAvg = recentMatches[recentMatches.length - 1].kills;
+            const priorHistory = fullHistory.filter(h => h.rawDate < fourteenDaysAgo);
+            // Baseline is the career average right before this 14-day window started
+            const baselineAvg = priorHistory.length > 0 
+                ? priorHistory[priorHistory.length - 1].kills 
+                : fullHistory[0].kills;
+            
+            const surgeValue = currentAvg - baselineAvg;
+            if (surgeValue > streaks.impK.v) {
+                streaks.impK = { p: name, v: surgeValue };
+            }
+
+            // 4. Clutch Factor (Highest Match Win % in current window)
+            const latestWinPctRaw = recentMatches[recentMatches.length - 1].matches;
+            const winPctValue = latestWinPctRaw <= 1 ? latestWinPctRaw * 100 : latestWinPctRaw;
+            
+            if (winPctValue > streaks.clutch.v) {
+                streaks.clutch = { p: name, v: winPctValue };
+            }
+        }
+    }
+});
+
+// Update the UI with specific colors
+$("#hotStreakContainer").html(`
+<h3 class="streak-main-title">🔥 14 Day Streaks</h3>
+    <div class="streak-card" style="border-left-color: #f1c40f;">
+        <div class="streak-title">🔥 Highest Single Game Kills</div>
+        <div class="streak-player">${streaks.topK.p}</div>
+        <div class="streak-stat">${streaks.topK.v} Kills</div>
+    </div>
+
+    <div class="streak-card" style="border-left-color: #e74c3c;">
+        <div class="streak-title">📈 Most Improved Avg. Kills</div>
+        <div class="streak-player">${streaks.impK.p}</div>
+        <div class="streak-stat">${streaks.impK.v > 0 ? '+' : ''}${streaks.impK.v.toFixed(2)} Avg</div>
+    </div>
+
+    <div class="streak-card" style="border-left-color: #2ecc71;">
+        <div class="streak-title">🎮 Most Active Player</div>
+        <div class="streak-player">${streaks.active.p}</div>
+        <div class="streak-stat">${streaks.active.v} Matches</div>
+    </div>
+
+    <div class="streak-card" style="border-left-color: #9b59b6;">
+        <div class="streak-title">💎 Clutch Factor (Highest Win %)</div>
+        <div class="streak-player">${streaks.clutch.p}</div>
+        <div class="streak-stat">${Math.round(streaks.clutch.v)}% Win Rate</div>
+    </div>
+`);
+
+    // Process Table
+    const sheet = workbook.Sheets["Old Bow v2"];
     const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
     const headers = json[0];
-    const rows = json.slice(1);
-    const normalizedRows = rows.filter(r => r.length > 0 && r[0] !== undefined && r[0] !== "").map(r => {
-        const row = r.slice(0, headers.length);
-        while (row.length < headers.length) row.push("");
-        return row;
-    });
+    const rows = json.slice(1).filter(r => r[0]);
 
-    headers.forEach(h => {
-      document.querySelector(".header-titles").insertAdjacentHTML("beforeend", `<th>${h}</th>`);
-      document.querySelector(".header-filters").insertAdjacentHTML("beforeend", "<th></th>");
-    });
+    const tRow = $(".header-titles").empty().append('<th>#</th>');
+    const fRow = $(".header-filters").empty().append('<th></th>');
+    headers.forEach(h => { if (!h.toLowerCase().includes("description")) { tRow.append(`<th>${h}</th>`); fRow.append(`<th></th>`); } });
 
-    const table = $('#dataTable').DataTable({
-      data: normalizedRows,
+    const descIdx = headers.findIndex(h => h && h.toLowerCase().includes("description"));
+
+    $('#dataTable').DataTable({
+      data: rows,
       columns: [
-        { data: null, defaultContent: "", className: "index-column", orderable: false, searchable: false },
+        { data: null, defaultContent: "", className: "index-column" },
         ...headers.map((h, i) => {
-          const cleanHeader = h.replace(/\s+/g, " ").trim().toLowerCase();
-          if (cleanHeader === "player") {
-            return { data: i, render: (data, type) => type === 'display' ? `<span class="player-link" onclick="showPlayerStats('${data}')">${data}</span>` : data };
+          const clean = h.toLowerCase();
+          if (clean.includes("description")) return { data: i, visible: false };
+          if (clean === "player") return { data: i, render: (d) => `<span class="player-link" onclick="showPlayerStats('${d}')">${d}</span>` };
+          if (clean === "avg. kills") return { data: i, render: (d) => isNaN(parseFloat(d)) ? d : Math.round(parseFloat(d)) };
+          if (clean === "trophies" || clean === "mvps") {
+            return { data: i, render: (d, type, row) => {
+                if (type === 'display' && d) {
+                    let tip = (descIdx !== -1 && row[descIdx]) ? row[descIdx] : "Achievement";
+                    return `<span title="${tip}" style="cursor:help; border-bottom:1px dotted #ccc;">${d}</span>`;
+                }
+                return d;
+            }};
           }
-          if (cleanHeader === "avg. kills") {
-            return { data: i, render: (d, t) => (t==='display'||t==='filter') ? (isNaN(Number(d)) ? "" : Math.round(Number(d))) : d };
-          }
-          if (h.includes("%") || cleanHeader.includes("rate") || cleanHeader.includes("accuracy")) {
-            return { data: i, render: (d, t) => (t==='display'||t==='filter') ? (isNaN(Number(d)) ? "" : (Number(d) <= 1 ? Math.round(Number(d)*100) : Math.round(Number(d))) + "%") : d };
-          }
+          if (h.includes("%") || clean.includes("rate")) return { data: i, render: (d) => isNaN(d) ? d : (d <= 1 ? Math.round(d*100) : Math.round(d)) + "%" };
           return { data: i, defaultContent: "" };
         })
       ],
-      scrollX: true, scrollY: "65vh", paging: false, fixedHeader: true, fixedColumns: { left: 2 },
-      columnDefs: [{ targets: 1, width: 160 }],
+      paging: false, scrollX: true, fixedHeader: true,
       initComplete: function () {
-        const api = this.api();
-        $("#clearFilters").on("click", () => { api.search("").columns().search("").draw(); $(".column-filter").val(""); });
-        api.columns().every(function (colIdx) {
-          if (colIdx === 0 || headers[colIdx - 1] !== "Player") return;
-          const select = $('<select class="column-filter"><option value="">All Players</option></select>')
-            .appendTo($(document.querySelectorAll(".header-filters th")[colIdx]))
-            .on("change", function() { column.search(this.value ? "^"+this.value+"$" : "", true, false).draw(); });
-          this.data().unique().sort().each(d => { if (d) { const clean = String(d).replace(/<[^>]*>?/gm, ''); select.append(`<option value="${clean}">${clean}</option>`); } });
+        this.api().columns().every(function (colIdx) {
+            if (colIdx === 0 || !this.visible()) return;
+            if ($(this.header()).text().toLowerCase() === "player") {
+                const select = $('<select class="column-filter"><option value="">All</option></select>')
+                    .appendTo($(".header-filters th").eq(colIdx))
+                    .on("change", (e) => this.search(e.target.value ? "^"+e.target.value+"$" : "", true, false).draw());
+                this.data().unique().sort().each(d => d && select.append(`<option value="${d}">${d}</option>`));
+            }
         });
       }
     });
 
-    table.on('draw.dt', function () {
-      table.column(0, { search: 'applied', order: 'applied' }).nodes().each((cell, i) => cell.innerHTML = i + 1);
-    }).draw();
-
+    const table = $('#dataTable').DataTable();
+    table.on('draw.dt', () => table.column(0, {search:'applied'}).nodes().each((c, i) => c.innerHTML = i + 1)).draw();
     initH2HOptions();
   });
 

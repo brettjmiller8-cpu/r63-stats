@@ -333,7 +333,8 @@ fetch("R63 Data.xlsx?v=" + new Date().getTime())
     maps: row["Running Avg. Maps"] || 0, 
     rounds: row["R Avg Rounds"] || 0, 
     // Ensure this matches the EXACT header in your "BA History" sheet
-    matches: row["Running Avg. Matches"] || 0 
+    matches: row["Running Avg. Matches"] || 0,
+    matchResult: row["Match Result"] || 0
 });
         });
     }
@@ -348,7 +349,7 @@ let streaks = {
     topK: { p: "None", v: 0 }, 
     impK: { p: "None", v: -99 },
     active: { p: "None", v: 0 },
-    clutch: { p: "None", v: 0 } 
+    winS: { p: "None", v: 0 }
 };
 
 Object.keys(globalHistory).forEach(name => {
@@ -387,12 +388,22 @@ Object.keys(globalHistory).forEach(name => {
                 streaks.impK = { p: name, v: surgeValue };
             }
 
-            // 4. Clutch Factor (Highest Match Win % in current window)
-            const latestWinPctRaw = recentMatches[recentMatches.length - 1].matches;
-            const winPctValue = latestWinPctRaw <= 1 ? latestWinPctRaw * 100 : latestWinPctRaw;
+// 4. Current Win Streak (Consecutive wins counting back from newest match)
+            let currentWinStreak = 0;
             
-            if (winPctValue > streaks.clutch.v) {
-                streaks.clutch = { p: name, v: winPctValue };
+            // Sort recent matches so the newest match is evaluated first
+            const sortedRecent = [...recentMatches].sort((a, b) => b.rawDate - a.rawDate);
+
+            for (let match of sortedRecent) {
+                if (parseInt(match.matchResult) === 1) {
+                    currentWinStreak++;
+                } else {
+                    break; // Streak broken, stop counting
+                }
+            }
+            
+            if (currentWinStreak > streaks.winS.v) {
+                streaks.winS = { p: name, v: currentWinStreak };
             }
         }
     }
@@ -402,7 +413,7 @@ Object.keys(globalHistory).forEach(name => {
 $("#hotStreakContainer").html(`
 <h3 class="streak-main-title">🔥 14 Day Streaks</h3>
     <div class="streak-card" style="border-left-color: #f1c40f;">
-        <div class="streak-title">🔥 Highest Single Game Kills</div>
+        <div class="streak-title">🎯 Highest Single Game Kills</div>
         <div class="streak-player">${streaks.topK.p}</div>
         <div class="streak-stat">${streaks.topK.v} Kills</div>
     </div>
@@ -419,10 +430,10 @@ $("#hotStreakContainer").html(`
         <div class="streak-stat">${streaks.active.v} Matches</div>
     </div>
 
-    <div class="streak-card" style="border-left-color: #9b59b6;">
-        <div class="streak-title">💎 Clutch Factor (Highest Win %)</div>
-        <div class="streak-player">${streaks.clutch.p}</div>
-        <div class="streak-stat">${Math.round(streaks.clutch.v)}% Win Rate</div>
+<div class="streak-card" style="border-left-color: #9b59b6;">
+        <div class="streak-title">🔥 Current Win Streak</div>
+        <div class="streak-player">${streaks.winS.p}</div>
+        <div class="streak-stat">${streaks.winS.v} Games</div>
     </div>
 `);
 

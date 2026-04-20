@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rainbow Six 3 Stats Tracker</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="style.css?v=1.2">
+    
+    <style>
+        .history-controls {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+        .selector-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        #playerSelect {
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            min-width: 200px;
+            font-size: 1rem;
+        }
+        .streak-display {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #9b59b6;
+            padding: 10px 20px;
+            background: #f3e5f5;
+            border-radius: 8px;
+            border: 1px solid #d1c4e9;
+        }
+
+        /* STRIPING FIX */
+        #historyTable tbody td {
+            background-color: transparent !important;
+        }
+        #historyTable.display tbody tr.odd {
+            background-color: #ffffff !important;
+        }
+        #historyTable.display tbody tr.even {
+            background-color: #f9f9f9 !important;
+        }
+        #historyTable thead th, 
+        #historyTable tbody td.nowrap {
+            white-space: nowrap;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="header-box">
+  <h2 style="margin:0;">👤 Player Match History</h2>
+</div>
+
+<div class="nav-buttons">
+  <a href="index.html"><button>Old Bow Stats</button></a>
+  <a href="OB_MA.html"><button>Old Bow Match Analyzer</button></a>
+  <a href="BA.html"><button>Black Arrow Stats</button></a>
+  <a href="BA_MA.html"><button>Black Arrow Match Analyzer</button></a>
+  <a href="player_history.html"><button class="active-btn">Player History</button></a>
+  <a href="Tournament_Champs.html"><button>Tournament Champs</button></a>
+  <a href="Match_submission.html"><button>Match Submission</button></a>
+  <a href="team_generator.html"><button>Team Balancer</button></a>
+</div>
+
+<div class="history-controls">
+    <div class="selector-group">
+        <strong>1. Select Version:</strong>
+        <button id="btnOB" class="active-btn" onclick="switchVersion('OB History', 'btnOB')">Old Bow</button>
+        <button id="btnBA" onclick="switchVersion('BA History', 'btnBA')">Black Arrow</button>
+    </div>
+    
+    <div class="selector-group">
+        <strong>2. Select Player:</strong>
+        <select id="playerSelect" onchange="updatePlayerView()">
+            <option value="">-- Select a Player --</option>
+        </select>
+    </div>
+
+    <div id="streakCounter" class="streak-display" style="display:none;">
+        🔥 Current Win Streak: <span id="streakValue">0</span> Games
+    </div>
+</div>
+
+<div class="stats-container">
+    <table id="historyTable" class="display stripe" style="width:100%">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Result</th>
+                <th>Kills</th>
+                <th>Maps (W-L)</th>
+                <th>Map Win %</th>
+                <th>Rounds Played</th>
+                <th>Rounds Won</th>
+                <th>Round Win %</th>
+                <th>Running Avg. Kills</th>
+                <th>Running Avg. Match Win %</th>
+                <th>Running Avg. Map Win %</th>
+                <th>Running Avg. Round Win %</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<script>
+let workbook;
+let table;
+let currentSheetData = [];
+
+async function init() {
+    const res = await fetch("R63 Data.xlsx?v=" + new Date().getTime());
+    const ab = await res.arrayBuffer();
+    workbook = XLSX.read(ab, {type: "array"});
+    
+    table = $('#historyTable').DataTable({
+        order: [[0, 'desc']], 
+        pageLength: 25,
+        columnDefs: [
+            { className: "dt-center", targets: "_all" },
+            { className: "nowrap", targets: 0 },
+            {
+                targets: 0,
+                render: function(data, type, row) {
+                    // This handles the sorting object properly
+                    if (type === 'sort' || type === 'type') {
+                        return data.sortVal;
+                    }
+                    return data.display;
+                }
+            }
+        ]
+    });
+
+    switchVersion('OB History', 'btnOB');
+}
+
+function switchVersion(sheetName, btnId) {
+    $('.history-controls button').removeClass('active-btn');
+    $(`#${btnId}`).addClass('active-btn');
+    
+    const sheet = workbook.Sheets[sheetName];
+    currentSheetData = XLSX.utils.sheet_to_json(sheet);
+    
+    populatePlayers();
+    updatePlayerView();
+}
+
+function populatePlayers() {
+    const playerSelect = document.getElementById('playerSelect');
+    const players = [...new Set(currentSheetData.map(row => row.Player))].sort();
+    playerSelect.innerHTML = '<option value="">-- Select a Player --</option>';
+    players.forEach(p => { if(p) playerSelect.add(new Option(p, p)); });
+}
+
+function updatePlayerView() {
+    const selectedPlayer = document.getElementById('playerSelect').value;
+    if (!selectedPlayer) {
+        table.clear().draw();
+        document.getElementById('streakCounter').style.display = 'none';
+        return;
+    }
+
+    const playerMatches = currentSheetData.filter(row => row.Player === selectedPlayer);
+    
+    // Streak logic
+    const sortedForStreak = [...playerMatches].sort((a, b) => b.Date - a.Date);
+    let streak = 0;
+    for (let m of sortedForStreak) {
+        if (parseInt(m["Match Result"]) === 1) streak++; else break;
+    }
+    document.getElementById('streakValue').innerText = streak;
+    document.getElementById('streakCounter').style.display = 'block';
+
+    const formattedData = playerMatches.map(row => {
+        // Correcting Date and Sort Order
+        const dateObj = { 
+            display: formatDate(row.Date), 
+            sortVal: row.Date 
+        };
+
+        const result = parseInt(row["Match Result"]) === 1 ? 
+            '<span style="color:#27ae60; font-weight:bold;">WIN</span>' : 
+            '<span style="color:#e74c3c; font-weight:bold;">LOSS</span>';
+            
+        const kills = row.Kills ? Math.round(row.Kills) : "0";
+        const mapScore = `${row["Maps Won"] || 0} - ${(row["Maps Played"] || 0) - (row["Maps Won"] || 0)}`;
+        const mapPct = row["Map %"] ? Math.round(row["Map %"] * 100) + "%" : "0%";
+        const rndPct = row["Round %"] ? Math.round(row["Round %"] * 100) + "%" : "0%";
+        const rndPlay = row["Rds Played"] ? Math.round(row["Rds Played"]) : "0";
+        const rndWin = row["Rds Won"] ? Math.round(row["Rds Won"]) : "0";
+        const avgkills = row["Overall Avg Kills"] ? Math.round(row["Overall Avg Kills"]) : "0";
+        const matchavg = row["Running Avg. Matches"] ? Math.round(row["Running Avg. Matches"] * 100) + "%" : "0%";
+        const mapavg = row["Running Avg. Maps"] ? Math.round(row["Running Avg. Maps"] * 100) + "%" : "0%";
+        const rndavg = row["R Avg Rounds"] ? Math.round(row["R Avg Rounds"] * 100) + "%" : "0%";
+
+        return [dateObj, result, kills, mapScore, mapPct, rndPlay, rndWin, rndPct, avgkills, matchavg, mapavg, rndavg];
+    });
+
+    table.clear().rows.add(formattedData).draw();
+}
+
+function formatDate(excelDate) {
+    if(!excelDate) return "";
+    // UTC adjustment to fix the "one day off" error
+    const date = new Date(Math.round((excelDate - 25569) * 86400 * 1000));
+    const yyyy = date.getUTCFullYear();
+    const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(date.getUTCDate()).padStart(2, '0');
+    return `${mm}-${dd}-${yyyy}`;
+}
+
+$(document).ready(init);
+</script>
+</body>
+</html>

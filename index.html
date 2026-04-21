@@ -451,7 +451,7 @@ if (clean.includes("description")) return { data: i, visible: false };
 if (clean === "player") return { data: i, render: (d) => `<span class="player-link" onclick="showPlayerStats('${d}')">${d}</span>` };
 
 // ADD THIS SECTION FOR THE NEW PIECE COLUMNS
-if (clean === "4 piece" || clean === "5 piece") {
+if (clean === "4 piece" || clean === "5 piece" || clean === "6 piece") {
     return { 
         data: i, 
         render: (d) => d ? d : 0 // Displays 0 if the Excel cell is empty

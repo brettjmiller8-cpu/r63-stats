@@ -56,6 +56,51 @@
         #historyTable tbody td.nowrap {
             white-space: nowrap;
         }
+        
+/* Monospace font gives it that "computer terminal" feel */
+#playerPhotoContainer {
+    display: none; 
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+@keyframes pulse-green {
+    0% { 
+        box-shadow: 0 0 5px rgba(46, 204, 113, 0.4);
+        border-color: rgba(46, 204, 113, 0.6);
+        filter: brightness(0.9);
+    }
+    50% { 
+        box-shadow: 0 0 20px rgba(46, 204, 113, 0.9);
+        border-color: rgba(46, 204, 113, 1);
+        filter: brightness(1.1);
+    }
+    100% { 
+        box-shadow: 0 0 5px rgba(46, 204, 113, 0.4);
+        border-color: rgba(46, 204, 113, 0.6);
+        filter: brightness(0.9);
+    }
+}
+
+#playerPhoto {
+    max-width: 300px;
+    max-height: 300px;
+    object-fit: contain;
+    background: #0a110a; /* Darker, slightly green-tinted background */
+    padding: 4px;
+    border: 2px solid #2ecc71;
+    /* Apply the tactical green pulse */
+    animation: pulse-green 2.5s ease-in-out infinite;
+    transition: transform 0.3s ease;
+}
+
+/* Optional: Slight zoom when you hover over the player */
+#playerPhoto:hover {
+    transform: scale(1.02);
+}
+
     </style>
 </head>
 
@@ -89,6 +134,10 @@
             <option value="">-- Select a Player --</option>
         </select>
     </div>
+
+<div id="playerPhotoContainer" style="display:none; margin-bottom: 10px;">
+    <img id="playerPhoto" src="" alt="Player Photo">
+</div>
 
     <div id="streakCounter" class="streak-display" style="display:none;">
         🔥 Current Win Streak: <span id="streakValue">0</span> Games
@@ -173,11 +222,27 @@ function populatePlayers() {
 
 function updatePlayerView() {
     const selectedPlayer = document.getElementById('playerSelect').value;
+    const photoContainer = document.getElementById('playerPhotoContainer');
+    const photoImg = document.getElementById('playerPhoto');
+    
     if (!selectedPlayer) {
         table.clear().draw();
         document.getElementById('streakCounter').style.display = 'none';
+        photoContainer.style.display = 'none'; // Hide if no player
         return;
     }
+
+    // --- PHOTO LOGIC ---
+    // This assumes your images are in an 'images' folder and named exactly like the player
+    // Example: "AJ.jpg" or "Pancake.png"
+    photoImg.src = `images/${selectedPlayer}.png`; 
+    photoContainer.style.display = 'block';
+
+    // Handle missing photos (so you don't get a "broken image" icon)
+    photoImg.onerror = function() {
+        this.src = 'images/default_avatar.png'; // Fallback image
+    };
+    // -------------------
 
     const playerMatches = currentSheetData.filter(row => row.Player === selectedPlayer);
     

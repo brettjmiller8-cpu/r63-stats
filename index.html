@@ -96,7 +96,11 @@
   <div class="modal-content">
     <span class="close-btn" onclick="closeModal()">&times;</span>
     <h2 id="modalPlayerName" style="text-align:center; color:#2c3e50; margin-bottom:30px;">Player History</h2>
-    
+
+<div id="playerPhotoContainer">
+    <img id="playerPhoto" src="" alt="Player Photo">
+    </div>
+
     <div class="chart-container">
         <h4 style="margin:0 0 10px 0;">Running Average Kills</h4>
         <canvas id="killsChart"></canvas>
@@ -127,90 +131,78 @@
 let globalHistory = {}; 
 let activeCharts = [];
 let h2hChartInstance = null;
+let playerAchievements = {}; 
 
 function closeModal() { document.getElementById("statsModal").style.display = "none"; }
 
 function formatDateToLongString(excelDate) {
-    // Using UTC methods prevents the "one day off" timezone shift
     const d = new Date(Math.round((excelDate - 25569) * 86400 * 1000));
-    
-    const months = [
-        "January", "February", "March", "April", "May", "June", 
-        "July", "August", "September", "October", "November", "December"
-    ];
-    
-    // Use getUTCDate() instead of getDate() to ignore local timezone
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     const day = d.getUTCDate();
     const month = months[d.getUTCMonth()];
     const year = d.getUTCFullYear();
-    
-    // Determine the suffix (st, nd, rd, or th)
     let suffix = "th";
     if (day % 10 === 1 && day !== 11) suffix = "st";
     else if (day % 10 === 2 && day !== 12) suffix = "nd";
     else if (day % 10 === 3 && day !== 13) suffix = "rd";
-    
     return `${month} ${day}${suffix} ${year}`;
-}
-
-function formatExcelDate(val) {
-    if (typeof val === 'number') {
-        const date = new Date((val - 25569) * 86400 * 1000);
-        const mm = String(date.getMonth() + 1).padStart(2, '0');
-        const dd = String(date.getDate()).padStart(2, '0');
-        const yyyy = date.getFullYear();
-        return `${mm}-${dd}-${yyyy}`;
-    }
-    return val;
 }
 
 function initH2HOptions() {
     const p1Select = document.getElementById('h2hPlayer1');
     const p2Select = document.getElementById('h2hPlayer2');
     const players = Object.keys(globalHistory).sort();
-
     players.forEach(name => {
         p1Select.add(new Option(name, name));
         p2Select.add(new Option(name, name));
     });
-
     if (p2Select.options.length > 1) p2Select.selectedIndex = 1;
     updateH2HChart();
 }
 
 function showPlayerStats(playerName) {
-  const data = globalHistory[playerName];
-  if (!data) { alert("No history found for " + playerName); return; }
+    const data = globalHistory[playerName];
+    if (!data) return;
 
-  document.getElementById("modalPlayerName").innerText = playerName + " - Historical Trends";
-  document.getElementById("statsModal").style.display = "block";
-  activeCharts.forEach(c => c.destroy());
-  activeCharts = [];
+    const photoContainer = document.getElementById('playerPhotoContainer');
+    const photo = document.getElementById('playerPhoto');
 
-  const labels = data.map(d => d.date);
-  activeCharts.push(new Chart(document.getElementById('killsChart'), {
-    type: 'line',
-    data: { labels: labels, datasets: [{ label: 'Avg Kills', data: data.map(d => d.kills), borderColor: '#34495e', backgroundColor: 'rgba(52, 73, 94, 0.1)', fill: true, tension: 0.3 }] },
-    options: { responsive: true, maintainAspectRatio: false }
-  }));
+    // Update Photo only
+    photo.src = `images/${playerName}.png`;
+    photo.onerror = function() { this.src = 'images/default_avatar.png'; };
+    photoContainer.style.display = 'flex';
 
-  activeCharts.push(new Chart(document.getElementById('mapsChart'), {
-    type: 'line',
-    data: { labels: labels, datasets: [{ label: 'Map Win %', data: data.map(d => d.maps * 100), borderColor: '#e67e22', backgroundColor: 'rgba(230, 126, 34, 0.1)', fill: true, tension: 0.3 }] },
-    options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
-  }));
+    // Show Modal & Charts
+    document.getElementById("modalPlayerName").innerText = playerName + " - Historical Trends";
+    document.getElementById("statsModal").style.display = "block";
+  
+    activeCharts.forEach(c => c.destroy());
+    activeCharts = [];
 
-  activeCharts.push(new Chart(document.getElementById('roundsChart'), {
-    type: 'line',
-    data: { labels: labels, datasets: [{ label: 'Round Win %', data: data.map(d => d.rounds * 100), borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)', fill: true, tension: 0.3 }] },
-    options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
-  }));
+    const labels = data.map(d => d.date);
+    activeCharts.push(new Chart(document.getElementById('killsChart'), {
+        type: 'line',
+        data: { labels: labels, datasets: [{ label: 'Avg Kills', data: data.map(d => d.kills), borderColor: '#34495e', backgroundColor: 'rgba(52, 73, 94, 0.1)', fill: true, tension: 0.3 }] },
+        options: { responsive: true, maintainAspectRatio: false }
+    }));
 
-  activeCharts.push(new Chart(document.getElementById('matchesChart'), {
-    type: 'line',
-    data: { labels: labels, datasets: [{ label: 'Match Win %', data: data.map(d => d.matches * 100), borderColor: '#9b59b6', backgroundColor: 'rgba(155, 89, 182, 0.1)', fill: true, tension: 0.3 }] },
-    options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
-  }));
+    activeCharts.push(new Chart(document.getElementById('mapsChart'), {
+        type: 'line',
+        data: { labels: labels, datasets: [{ label: 'Map Win %', data: data.map(d => d.maps * 100), borderColor: '#e67e22', backgroundColor: 'rgba(230, 126, 34, 0.1)', fill: true, tension: 0.3 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
+    }));
+
+    activeCharts.push(new Chart(document.getElementById('roundsChart'), {
+        type: 'line',
+        data: { labels: labels, datasets: [{ label: 'Round Win %', data: data.map(d => d.rounds * 100), borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)', fill: true, tension: 0.3 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
+    }));
+
+    activeCharts.push(new Chart(document.getElementById('matchesChart'), {
+        type: 'line',
+        data: { labels: labels, datasets: [{ label: 'Match Win %', data: data.map(d => d.matches * 100), borderColor: '#9b59b6', backgroundColor: 'rgba(155, 89, 182, 0.1)', fill: true, tension: 0.3 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
+    }));
 }
 
 function updateH2HChart() {
@@ -220,100 +212,23 @@ function updateH2HChart() {
 
     const p1 = globalHistory[n1][globalHistory[n1].length - 1];
     const p2 = globalHistory[n2][globalHistory[n2].length - 1];
-
     const fixPct = (val) => (val <= 1 ? val * 100 : val);
     const normKills = (v) => (Math.min(v, 30) / 30) * 100;
 
     if (h2hChartInstance) h2hChartInstance.destroy();
-    
     const ctx = document.getElementById('h2hRadarChart').getContext('2d');
     h2hChartInstance = new Chart(ctx, {
         type: 'radar',
         data: {
-            // These act as your Axis Labels at each point of the radar
-            labels: [
-                'Average Kills', 
-                'Map Win %', 
-                'Round Win %', 
-                'Match Win %'
-            ],
+            labels: ['Average Kills', 'Map Win %', 'Round Win %', 'Match Win %'],
             datasets: [
-                { 
-                    label: n1, 
-                    data: [normKills(p1.kills), fixPct(p1.maps), fixPct(p1.rounds), fixPct(p1.matches)], 
-                    borderColor: '#3498db', 
-                    backgroundColor: 'rgba(52, 152, 219, 0.2)',
-                    pointBackgroundColor: '#3498db',
-                    borderWidth: 3
-                },
-                { 
-                    label: n2, 
-                    data: [normKills(p2.kills), fixPct(p2.maps), fixPct(p2.rounds), fixPct(p2.matches)], 
-                    borderColor: '#e74c3c', 
-                    backgroundColor: 'rgba(231, 76, 60, 0.2)',
-                    pointBackgroundColor: '#e74c3c',
-                    borderWidth: 3
-                }
+                { label: n1, data: [normKills(p1.kills), fixPct(p1.maps), fixPct(p1.rounds), fixPct(p1.matches)], borderColor: '#3498db', backgroundColor: 'rgba(52, 152, 219, 0.2)', pointBackgroundColor: '#3498db', borderWidth: 3 },
+                { label: n2, data: [normKills(p2.kills), fixPct(p2.maps), fixPct(p2.rounds), fixPct(p2.matches)], borderColor: '#e74c3c', backgroundColor: 'rgba(231, 76, 60, 0.2)', pointBackgroundColor: '#e74c3c', borderWidth: 3 }
             ]
         },
-        options: {
-            maintainAspectRatio: false,
-            scales: {
-                r: {
-                    min: 0,
-                    max: 100,
-                    beginAtZero: true,
-                    ticks: {
-                        display: false, // Hides the numbers (0, 20, 40...) on the web lines
-                        stepSize: 20
-                    },
-                    // Styling for the labels at the points of the radar
-                    pointLabels: {
-                        display: true,
-                        font: {
-                            size: 14,
-                            weight: 'bold',
-                            family: "'Segoe UI', sans-serif"
-                        },
-                        color: '#2c3e50',
-                        padding: 10
-                    },
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.1)'
-                    },
-                    angleLines: {
-                        color: 'rgba(0, 0, 0, 0.1)'
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    position: 'top',
-                    labels: {
-                        boxWidth: 20,
-                        font: { size: 13, weight: '600' }
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            let label = context.dataset.label || '';
-                            let value = context.raw;
-                            if (context.dataIndex === 0) {
-                                let realKills = (value / 100) * 30;
-                                return label + ": " + realKills.toFixed(1) + " Kills";
-                            } else {
-                                return label + ": " + Math.round(value) + "%";
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        options: { maintainAspectRatio: false, scales: { r: { min: 0, max: 100, beginAtZero: true, ticks: { display: false, stepSize: 20 }, pointLabels: { display: true, font: { size: 14, weight: 'bold' }, color: '#2c3e50' } } } }
     });
 }
-
-
 
 fetch("R63 Data.xlsx?v=" + new Date().getTime())
   .then(res => res.arrayBuffer())
@@ -329,105 +244,45 @@ fetch("R63 Data.xlsx?v=" + new Date().getTime())
             const p = row["Player"];
             if (!globalHistory[p]) globalHistory[p] = [];
             globalHistory[p].push({ 
-  rawDate: rawDate, 
-    date: formatDateToLongString(rawDate), 
-    kills: row["Overall Avg Kills"] || 0, 
-    singleKills: row["Kills"] || 0,
-    maps: row["Running Avg. Maps"] || 0, 
-    rounds: row["R Avg Rounds"] || 0, 
-    // Ensure this matches the EXACT header in your "OB History" sheet
-    matches: row["Running Avg. Matches"] || 0 
-});
+                rawDate: rawDate, date: formatDateToLongString(rawDate), 
+                kills: row["Overall Avg Kills"] || 0, singleKills: row["Kills"] || 0,
+                maps: row["Running Avg. Maps"] || 0, rounds: row["R Avg Rounds"] || 0, 
+                matches: row["Running Avg. Matches"] || 0 
+            });
         });
     }
 
     if (latestExcelDate > 0) $(".date-badge").text(formatDateToLongString(latestExcelDate));
 
-// --- Corrected Hot Streaks Logic: Strict 14-Day 3-Match Minimum ---
-const fourteenDaysAgo = latestExcelDate - 14;
-const WINDOW_MIN_MATCHES = 3; // Specifically for the last 14 days
+    // Hot Streaks Logic
+    const fourteenDaysAgo = latestExcelDate - 14;
+    let streaks = { topK: { p: "None", v: 0 }, impK: { p: "None", v: -99 }, active: { p: "None", v: 0 }, clutch: { p: "None", v: 0 } };
 
-let streaks = { 
-    topK: { p: "None", v: 0 }, 
-    impK: { p: "None", v: -99 },
-    active: { p: "None", v: 0 },
-    clutch: { p: "None", v: 0 } 
-};
-
-Object.keys(globalHistory).forEach(name => {
-    const fullHistory = globalHistory[name];
-    // Filter for matches ONLY within the last 14 days
-    const recentMatches = fullHistory.filter(h => h.rawDate >= fourteenDaysAgo);
-    
-    // Only proceed if they are active (at least 1 game in 14 days)
-    if (recentMatches.length > 0) {
-        
-        // 1. High Game (Single best performance, no minimum games required)
-        recentMatches.forEach(match => {
-            if (match.singleKills > streaks.topK.v) {
-                streaks.topK = { p: name, v: match.singleKills };
-            }
-        });
-
-        // 2. Most Active (Workhorse)
-        if (recentMatches.length > streaks.active.v) {
-            streaks.active = { p: name, v: recentMatches.length };
-        }
-
-        // --- STRICT 3-MATCH MINIMUM FOR AVERAGES ---
-        if (recentMatches.length >= WINDOW_MIN_MATCHES) {
-            
-            // 3. Kill Surge Calculation
-            const currentAvg = recentMatches[recentMatches.length - 1].kills;
-            const priorHistory = fullHistory.filter(h => h.rawDate < fourteenDaysAgo);
-            // Baseline is the career average right before this 14-day window started
-            const baselineAvg = priorHistory.length > 0 
-                ? priorHistory[priorHistory.length - 1].kills 
-                : fullHistory[0].kills;
-            
-            const surgeValue = currentAvg - baselineAvg;
-            if (surgeValue > streaks.impK.v) {
-                streaks.impK = { p: name, v: surgeValue };
-            }
-
-            // 4. Clutch Factor (Highest Match Win % in current window)
-            const latestWinPctRaw = recentMatches[recentMatches.length - 1].matches;
-            const winPctValue = latestWinPctRaw <= 1 ? latestWinPctRaw * 100 : latestWinPctRaw;
-            
-            if (winPctValue > streaks.clutch.v) {
-                streaks.clutch = { p: name, v: winPctValue };
+    Object.keys(globalHistory).forEach(name => {
+        const fullHistory = globalHistory[name];
+        const recentMatches = fullHistory.filter(h => h.rawDate >= fourteenDaysAgo);
+        if (recentMatches.length > 0) {
+            recentMatches.forEach(match => { if (match.singleKills > streaks.topK.v) streaks.topK = { p: name, v: match.singleKills }; });
+            if (recentMatches.length > streaks.active.v) streaks.active = { p: name, v: recentMatches.length };
+            if (recentMatches.length >= 3) {
+                const currentAvg = recentMatches[recentMatches.length - 1].kills;
+                const priorHistory = fullHistory.filter(h => h.rawDate < fourteenDaysAgo);
+                const baselineAvg = priorHistory.length > 0 ? priorHistory[priorHistory.length - 1].kills : fullHistory[0].kills;
+                const surgeValue = currentAvg - baselineAvg;
+                if (surgeValue > streaks.impK.v) streaks.impK = { p: name, v: surgeValue };
+                const winPctValue = recentMatches[recentMatches.length - 1].matches <= 1 ? recentMatches[recentMatches.length - 1].matches * 100 : recentMatches[recentMatches.length - 1].matches;
+                if (winPctValue > streaks.clutch.v) streaks.clutch = { p: name, v: winPctValue };
             }
         }
-    }
-});
+    });
 
-// Update the UI with specific colors
-$("#hotStreakContainer").html(`
-<h3 class="streak-main-title">🔥 14 Day Streaks</h3>
-    <div class="streak-card" style="border-left-color: #f1c40f;">
-        <div class="streak-title">🔥 Highest Single Game Kills</div>
-        <div class="streak-player">${streaks.topK.p}</div>
-        <div class="streak-stat">${streaks.topK.v} Kills</div>
-    </div>
-
-    <div class="streak-card" style="border-left-color: #e74c3c;">
-        <div class="streak-title">📈 Most Improved Avg. Kills</div>
-        <div class="streak-player">${streaks.impK.p}</div>
-        <div class="streak-stat">${streaks.impK.v > 0 ? '+' : ''}${streaks.impK.v.toFixed(2)} Avg</div>
-    </div>
-
-    <div class="streak-card" style="border-left-color: #2ecc71;">
-        <div class="streak-title">🎮 Most Active Player</div>
-        <div class="streak-player">${streaks.active.p}</div>
-        <div class="streak-stat">${streaks.active.v} Matches</div>
-    </div>
-
-    <div class="streak-card" style="border-left-color: #9b59b6;">
-        <div class="streak-title">💎 Clutch Factor (Highest Win %)</div>
-        <div class="streak-player">${streaks.clutch.p}</div>
-        <div class="streak-stat">${Math.round(streaks.clutch.v)}% Win Rate</div>
-    </div>
-`);
+    $("#hotStreakContainer").html(`
+        <h3 class="streak-main-title">🔥 14 Day Streaks</h3>
+        <div class="streak-card" style="border-left-color: #f1c40f;"><div class="streak-title">🔥 Highest Game</div><div class="streak-player">${streaks.topK.p}</div><div class="streak-stat">${streaks.topK.v} Kills</div></div>
+        <div class="streak-card" style="border-left-color: #e74c3c;"><div class="streak-title">📈 Most Improved</div><div class="streak-player">${streaks.impK.p}</div><div class="streak-stat">${streaks.impK.v > 0 ? '+' : ''}${streaks.impK.v.toFixed(2)} Avg</div></div>
+        <div class="streak-card" style="border-left-color: #2ecc71;"><div class="streak-title">🎮 Most Active</div><div class="streak-player">${streaks.active.p}</div><div class="streak-stat">${streaks.active.v} Matches</div></div>
+        <div class="streak-card" style="border-left-color: #9b59b6;"><div class="streak-title">💎 Clutch Factor</div><div class="streak-player">${streaks.clutch.p}</div><div class="streak-stat">${Math.round(streaks.clutch.v)}% Win Rate</div></div>
+    `);
 
     // Process Table
     const sheet = workbook.Sheets["Old Bow v2"];
@@ -441,39 +296,49 @@ $("#hotStreakContainer").html(`
 
     const descIdx = headers.findIndex(h => h && h.toLowerCase().includes("description"));
 
-    $('#dataTable').DataTable({
+$('#dataTable').DataTable({
       data: rows,
       columns: [
         { data: null, defaultContent: "", className: "index-column" },
         ...headers.map((h, i) => {
           const clean = h.toLowerCase();
-if (clean.includes("description")) return { data: i, visible: false };
-if (clean === "player") return { data: i, render: (d) => `<span class="player-link" onclick="showPlayerStats('${d}')">${d}</span>` };
-
-// ADD THIS SECTION FOR THE NEW PIECE COLUMNS
-if (clean === "4 piece" || clean === "5 piece" || clean === "6 piece") {
+          
+          // Hide description column entirely
+          if (clean.includes("description")) return { data: i, visible: false };
+          
+          // Render Player links
+          if (clean === "player") return { data: i, render: (d) => `<span class="player-link" onclick="showPlayerStats('${d}')">${d}</span>` };
+          
+          // Render 4, 5, 6, 7 pieces
+if (clean === "4 piece" || clean === "5 piece" || clean === "6 piece" || clean === "7 piece") {
     return { 
         data: i, 
         render: (d) => d ? d : 0 // Displays 0 if the Excel cell is empty
     };
 }
-          if (clean.includes("description")) return { data: i, visible: false };
-          if (clean === "player") return { data: i, render: (d) => `<span class="player-link" onclick="showPlayerStats('${d}')">${d}</span>` };
+          
+          // Render Avg Kills
           if (clean === "avg. kills") return { data: i, render: (d) => isNaN(parseFloat(d)) ? d : Math.round(parseFloat(d)) };
+
+          // MODIFIED: Render trophies/mvps without the tooltip span
           if (clean === "trophies" || clean === "mvps") {
-            return { data: i, render: (d, type, row) => {
-                if (type === 'display' && d) {
-                    let tip = (descIdx !== -1 && row[descIdx]) ? row[descIdx] : "Achievement";
-                    return `<span title="${tip}" style="cursor:help; border-bottom:1px dotted #ccc;">${d}</span>`;
-                }
-                return d;
-            }};
+            return { 
+                data: i, 
+                render: (d) => d ? d : "" 
+            };
           }
-          if (h.includes("%") || clean.includes("rate")) return { data: i, render: (d) => isNaN(d) ? d : (d <= 1 ? Math.round(d*100) : Math.round(d)) + "%" };
+
+          // Render Percentages
+          if (h.includes("%") || clean.includes("rate")) {
+            return { data: i, render: (d) => isNaN(d) ? d : (d <= 1 ? Math.round(d*100) : Math.round(d)) + "%" };
+          }
+
           return { data: i, defaultContent: "" };
         })
       ],
-      paging: false, scrollX: true, fixedHeader: true,
+      paging: false, 
+      scrollX: true, 
+      fixedHeader: true,
       initComplete: function () {
         this.api().columns().every(function (colIdx) {
             if (colIdx === 0 || !this.visible()) return;

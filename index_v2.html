@@ -97,6 +97,10 @@
     <span class="close-btn" onclick="closeModal()">&times;</span>
     <h2 id="modalPlayerName" style="text-align:center; color:#2c3e50; margin-bottom:30px;">Player History</h2>
     
+    <div id="playerPhotoContainer">
+    <img id="playerPhoto" src="" alt="Player Photo">
+    </div>
+
     <div class="chart-container">
         <h4 style="margin:0 0 10px 0;">Running Average Kills</h4>
         <canvas id="killsChart"></canvas>
@@ -179,38 +183,48 @@ function initH2HOptions() {
 }
 
 function showPlayerStats(playerName) {
-  const data = globalHistory[playerName];
-  if (!data) { alert("No history found for " + playerName); return; }
+    const data = globalHistory[playerName];
+    if (!data) return;
 
-  document.getElementById("modalPlayerName").innerText = playerName + " - Historical Trends";
-  document.getElementById("statsModal").style.display = "block";
-  activeCharts.forEach(c => c.destroy());
-  activeCharts = [];
+    const photoContainer = document.getElementById('playerPhotoContainer');
+    const photo = document.getElementById('playerPhoto');
 
-  const labels = data.map(d => d.date);
-  activeCharts.push(new Chart(document.getElementById('killsChart'), {
-    type: 'line',
-    data: { labels: labels, datasets: [{ label: 'Avg Kills', data: data.map(d => d.kills), borderColor: '#34495e', backgroundColor: 'rgba(52, 73, 94, 0.1)', fill: true, tension: 0.3 }] },
-    options: { responsive: true, maintainAspectRatio: false }
-  }));
+    // Update Photo only
+    photo.src = `images/${playerName}.png`;
+    photo.onerror = function() { this.src = 'images/default_avatar.png'; };
+    photoContainer.style.display = 'flex';
 
-  activeCharts.push(new Chart(document.getElementById('mapsChart'), {
-    type: 'line',
-    data: { labels: labels, datasets: [{ label: 'Map Win %', data: data.map(d => d.maps * 100), borderColor: '#e67e22', backgroundColor: 'rgba(230, 126, 34, 0.1)', fill: true, tension: 0.3 }] },
-    options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
-  }));
+    // Show Modal & Charts
+    document.getElementById("modalPlayerName").innerText = playerName + " - Historical Trends";
+    document.getElementById("statsModal").style.display = "block";
+  
+    activeCharts.forEach(c => c.destroy());
+    activeCharts = [];
 
-  activeCharts.push(new Chart(document.getElementById('roundsChart'), {
-    type: 'line',
-    data: { labels: labels, datasets: [{ label: 'Round Win %', data: data.map(d => d.rounds * 100), borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)', fill: true, tension: 0.3 }] },
-    options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
-  }));
+    const labels = data.map(d => d.date);
+    activeCharts.push(new Chart(document.getElementById('killsChart'), {
+        type: 'line',
+        data: { labels: labels, datasets: [{ label: 'Avg Kills', data: data.map(d => d.kills), borderColor: '#34495e', backgroundColor: 'rgba(52, 73, 94, 0.1)', fill: true, tension: 0.3 }] },
+        options: { responsive: true, maintainAspectRatio: false }
+    }));
 
-  activeCharts.push(new Chart(document.getElementById('matchesChart'), {
-    type: 'line',
-    data: { labels: labels, datasets: [{ label: 'Match Win %', data: data.map(d => d.matches * 100), borderColor: '#9b59b6', backgroundColor: 'rgba(155, 89, 182, 0.1)', fill: true, tension: 0.3 }] },
-    options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
-  }));
+    activeCharts.push(new Chart(document.getElementById('mapsChart'), {
+        type: 'line',
+        data: { labels: labels, datasets: [{ label: 'Map Win %', data: data.map(d => d.maps * 100), borderColor: '#e67e22', backgroundColor: 'rgba(230, 126, 34, 0.1)', fill: true, tension: 0.3 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
+    }));
+
+    activeCharts.push(new Chart(document.getElementById('roundsChart'), {
+        type: 'line',
+        data: { labels: labels, datasets: [{ label: 'Round Win %', data: data.map(d => d.rounds * 100), borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)', fill: true, tension: 0.3 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
+    }));
+
+    activeCharts.push(new Chart(document.getElementById('matchesChart'), {
+        type: 'line',
+        data: { labels: labels, datasets: [{ label: 'Match Win %', data: data.map(d => d.matches * 100), borderColor: '#9b59b6', backgroundColor: 'rgba(155, 89, 182, 0.1)', fill: true, tension: 0.3 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
+    }));
 }
 
 function updateH2HChart() {
@@ -462,7 +476,7 @@ if (clean.includes("description")) return { data: i, visible: false };
 if (clean === "player") return { data: i, render: (d) => `<span class="player-link" onclick="showPlayerStats('${d}')">${d}</span>` };
 
 // ADD THIS SECTION FOR THE NEW PIECE COLUMNS
-if (clean === "4 piece" || clean === "5 piece" || clean === "6 piece") {
+if (clean === "4 piece" || clean === "5 piece" || clean === "6 piece" || clean === "7 piece") {
     return { 
         data: i, 
         render: (d) => d ? d : 0 // Displays 0 if the Excel cell is empty

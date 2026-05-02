@@ -212,21 +212,96 @@ function updateH2HChart() {
 
     const p1 = globalHistory[n1][globalHistory[n1].length - 1];
     const p2 = globalHistory[n2][globalHistory[n2].length - 1];
+
     const fixPct = (val) => (val <= 1 ? val * 100 : val);
     const normKills = (v) => (Math.min(v, 30) / 30) * 100;
 
     if (h2hChartInstance) h2hChartInstance.destroy();
+    
     const ctx = document.getElementById('h2hRadarChart').getContext('2d');
     h2hChartInstance = new Chart(ctx, {
         type: 'radar',
         data: {
-            labels: ['Average Kills', 'Map Win %', 'Round Win %', 'Match Win %'],
+            // These act as your Axis Labels at each point of the radar
+            labels: [
+                'Average Kills', 
+                'Map Win %', 
+                'Round Win %', 
+                'Match Win %'
+            ],
             datasets: [
-                { label: n1, data: [normKills(p1.kills), fixPct(p1.maps), fixPct(p1.rounds), fixPct(p1.matches)], borderColor: '#3498db', backgroundColor: 'rgba(52, 152, 219, 0.2)', pointBackgroundColor: '#3498db', borderWidth: 3 },
-                { label: n2, data: [normKills(p2.kills), fixPct(p2.maps), fixPct(p2.rounds), fixPct(p2.matches)], borderColor: '#e74c3c', backgroundColor: 'rgba(231, 76, 60, 0.2)', pointBackgroundColor: '#e74c3c', borderWidth: 3 }
+                { 
+                    label: n1, 
+                    data: [normKills(p1.kills), fixPct(p1.maps), fixPct(p1.rounds), fixPct(p1.matches)], 
+                    borderColor: '#3498db', 
+                    backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                    pointBackgroundColor: '#3498db',
+                    borderWidth: 3
+                },
+                { 
+                    label: n2, 
+                    data: [normKills(p2.kills), fixPct(p2.maps), fixPct(p2.rounds), fixPct(p2.matches)], 
+                    borderColor: '#e74c3c', 
+                    backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                    pointBackgroundColor: '#e74c3c',
+                    borderWidth: 3
+                }
             ]
         },
-        options: { maintainAspectRatio: false, scales: { r: { min: 0, max: 100, beginAtZero: true, ticks: { display: false, stepSize: 20 }, pointLabels: { display: true, font: { size: 14, weight: 'bold' }, color: '#2c3e50' } } } }
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    min: 0,
+                    max: 100,
+                    beginAtZero: true,
+                    ticks: {
+                        display: false, // Hides the numbers (0, 20, 40...) on the web lines
+                        stepSize: 20
+                    },
+                    // Styling for the labels at the points of the radar
+                    pointLabels: {
+                        display: true,
+                        font: {
+                            size: 14,
+                            weight: 'bold',
+                            family: "'Segoe UI', sans-serif"
+                        },
+                        color: '#2c3e50',
+                        padding: 10
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    },
+                    angleLines: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        boxWidth: 20,
+                        font: { size: 13, weight: '600' }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            let value = context.raw;
+                            if (context.dataIndex === 0) {
+                                let realKills = (value / 100) * 30;
+                                return label + ": " + realKills.toFixed(1) + " Kills";
+                            } else {
+                                return label + ": " + Math.round(value) + "%";
+                            }
+                        }
+                    }
+                }
+            }
+        }
     });
 }
 

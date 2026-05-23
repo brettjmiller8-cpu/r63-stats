@@ -81,8 +81,7 @@
             <tr>
                 <th style="width: 40px;">Select</th>
                 <th>Player</th>
-                <th>Avg. Kills</th>
-                <th>Match Win %</th>
+                <th>Median Kills</th>
             </tr>
         </thead>
         <tbody></tbody>
@@ -114,27 +113,15 @@ function switchData(sheetName, btnId) {
     const json = XLSX.utils.sheet_to_json(sheet, {header: 1});
     const headers = json[0]; // Get the header row
 
-    // Find the correct indexes dynamically based on the header names
-    const killsIdx = headers.findIndex(h => h && (h === "Avg. Kills" || h.toLowerCase().includes("avg. kills")));
-const matchIdx = headers.findIndex(h => h && (h === "Match %" || h.toLowerCase().includes("win %")));
+    // Find the correct index dynamically based on the "Median Kills" header name
+    const killsIdx = headers.findIndex(h => h && (h === "Median Kills" || h.toLowerCase().includes("median kills")));
 
-const data = json.slice(1).filter(r => r[0]).map(r => {
-    const name = r[0];
-    const avgKills = Number(r[killsIdx] || 0).toFixed(1);
-    
-    // Ensure we are pulling the decimal value (e.g., 0.65) and converting to 65%
-    let matchVal = Number(r[matchIdx] || 0);
-    let matchDisplay;
-    
-    // This logic handles both decimal (0.75) and whole number (75) formats
-    if (matchVal > 0 && matchVal <= 1) {
-        matchDisplay = Math.round(matchVal * 100) + "%";
-    } else {
-        matchDisplay = Math.round(matchVal) + "%";
-    }
-
-    return [name, avgKills, matchDisplay];
-});
+    const data = json.slice(1).filter(r => r[0]).map(r => {
+        const name = r[0];
+        const medianKills = Number(r[killsIdx] || 0).toFixed(1);
+        
+        return [name, medianKills];
+    });
 
     table.clear().rows.add(data).draw();
 }
@@ -148,7 +135,7 @@ async function init() {
     table = $('#poolTable').DataTable({
         paging: false,
         info: false,
-        order: [[2, 'desc']],
+        order: [[2, 'desc']], // Orders by Median Kills column descending by default
         columns: [
             { 
                 data: null, 
@@ -156,8 +143,7 @@ async function init() {
                 orderable: false 
             },
             { data: 0 },
-            { data: 1 },
-            { data: 2 }
+            { data: 1 }
         ],
         columnDefs: [{ className: "dt-center", targets: "_all" }]
     });

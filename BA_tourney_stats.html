@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Rainbow Six 3 Stats Tracker</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/3.4.0/css/fixedHeader.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.min.css">
+<link rel="stylesheet" href="style.css?v=1.2">
+</head>
+
+<body>
+
+<div class="header-box">
+  <h2 style="margin:0;">🎖️ R63: Black Arrow Stats</h2>
+  <button id="clearFilters">🗑 Clear Filters</button>
+</div>
+
+<div class="nav-buttons">
+  <a href="index.html"><button>Old Bow Stats</button></a>
+  <a href="OB_MA.html"><button>Old Bow Match Analyzer</button></a>
+  <a href="BA.html"><button class="active-btn">Black Arrow Stats</button></a>
+  <a href="BA_MA.html"><button>Black Arrow Match Analyzer</button></a>
+  <a href="player_history.html"><button>Player History</button></a>
+  <a href="Tournament_Champs.html"><button>Tournament Champs</button></a>
+  <a href="Match_submission.html"><button>Match Submission</button></a>
+  <a href="team_generator.html"><button>Team Balancer</button></a>
+  <a href="calendar.html"><button>Calendar</button></a>
+</div>
+
+<div class="last-updated-container">
+  <span>📅 Date Last Updated:</span>
+  <span class="date-badge"></span>
+</div>
+
+<div class="tabs" style="margin-bottom: 20px;">
+  <a href="BA.html"><button>All Time Leaderboard</button></a>
+  <a href="BA_v2.html"><button>Season 2</button></a>
+  <a href="BA_tourney_stats.html"><button class="active-btn">Tourney Stats</button></a>
+</div>
+
+<div class="comments-container" style="border-top: 5px solid #3498db;">
+  <h3>⚔️ Black Arrow Head-to-Head Comparison</h3>
+  <div class="h2h-controls">
+    <div>
+      <label>Player 1: </label>
+      <select id="h2hPlayer1" class="h2h-select" onchange="updateH2HChart()"></select>
+    </div>
+    <div style="font-weight: bold; font-size: 1.2rem; color: #e74c3c;">VS</div>
+    <div>
+      <label>Player 2: </label>
+      <select id="h2hPlayer2" class="h2h-select" onchange="updateH2HChart()"></select>
+    </div>
+  </div>
+  <div style="height: 400px; position: relative;">
+    <canvas id="h2hRadarChart"></canvas>
+  </div>
+</div>
+
+<div class="stats-container">
+  <table id="dataTable" class="display" style="width:100%">
+    <thead>
+      <tr class="header-titles"><th class="index-column">#</th></tr>
+      <tr class="header-filters"><th></th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+<div class="legend-container">
+    <div class="legend-item">
+        <span class="legend-icon">🏆</span>
+        <span class="legend-text">Tournament Win</span>
+    </div>
+    <div class="legend-item">
+        <span class="legend-icon">👑</span>
+        <span class="legend-text">Match MVP</span>
+    </div>
+    <div class="legend-item">
+        <span class="legend-icon">🏅</span> <span class="legend-text">Special Match Win</span>
+    </div>
+</div>
+<div class="comments-container">
+  <h3>📝 General Match Comments</h3>
+  <div id="matchComments">
+    Stats include all cash tournament matches.
+  </div>
+</div>
+
+<div id="statsModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeModal()">&times;</span>
+    <h2 id="modalPlayerName" style="text-align:center; color:#2c3e50; margin-bottom:30px;">Player History</h2>
+    
+    <div id="playerPhotoContainer">
+    <img id="playerPhoto" src="" alt="Player Photo">
+    </div>
+
+    <div class="chart-container">
+        <h4 style="margin:0 0 10px 0;">Running Average Kills</h4>
+        <canvas id="killsChart"></canvas>
+    </div>
+    <div class="chart-container">
+        <h4 style="margin:0 0 10px 0;">Running Map Win %</h4>
+        <canvas id="mapsChart"></canvas>
+    </div>
+    <div class="chart-container">
+        <h4 style="margin:0 0 10px 0;">Running Round Win %</h4>
+        <canvas id="roundsChart"></canvas>
+    </div>
+    <div class="chart-container">
+        <h4 style="margin:0 0 10px 0;">Running Match Win %</h4>
+        <canvas id="matchesChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/fixedheader/3.4.0/js/dataTables.fixedHeader.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+let globalHistory = {}; 
+let activeCharts = [];
+let h2hChartInstance = null;
+
+function formatDateToLongString(excelDate) {
+    // Using UTC methods prevents the "one day off" timezone shift
+    const d = new Date(Math.round((excelDate - 25569) * 86400 * 1000));
+    
+    const months = [
+        "January", "February", "March", "April", "May", "June", 
+        "July", "August", "September", "October", "November", "December"
+    ];
+    
+    // Use getUTCDate() instead of getDate() to ignore local timezone
+    const day = d.getUTCDate();
+    const month = months[d.getUTCMonth()];
+    const year = d.getUTCFullYear();
+    
+    // Determine the suffix (st, nd, rd, or th)
+    let suffix = "th";
+    if (day % 10 === 1 && day !== 11) suffix = "st";
+    else if (day % 10 === 2 && day !== 12) suffix = "nd";
+    else if (day % 10 === 3 && day !== 13) suffix = "rd";
+    
+    return `${month} ${day}${suffix} ${year}`;
+}
+
+function closeModal() {
+  document.getElementById("statsModal").style.display = "none";
+}
+
+function formatExcelDate(val) {
+    if (typeof val === 'number') {
+        const date = new Date((val - 25569) * 86400 * 1000);
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        const yyyy = date.getFullYear();
+        return `${mm}-${dd}-${yyyy}`;
+    }
+    return val;
+}
+
+// H2H Logic
+function initH2HOptions() {
+    const p1Select = document.getElementById('h2hPlayer1');
+    const p2Select = document.getElementById('h2hPlayer2');
+    const players = Object.keys(globalHistory).sort();
+
+    players.forEach(name => {
+        p1Select.add(new Option(name, name));
+        p2Select.add(new Option(name, name));
+    });
+
+    if (p2Select.options.length > 1) p2Select.selectedIndex = 1;
+    updateH2HChart();
+}
+
+function updateH2HChart() {
+    const name1 = document.getElementById('h2hPlayer1').value;
+    const name2 = document.getElementById('h2hPlayer2').value;
+
+    if (!globalHistory[name1] || !globalHistory[name2]) return;
+
+    const getLatest = (name) => globalHistory[name][globalHistory[name].length - 1];
+    const p1 = getLatest(name1);
+    const p2 = getLatest(name2);
+
+    // Normalization Logic:
+    // We treat 40 kills as "100%" on the chart.
+    const normalizeKills = (kills) => {
+        const maxKills = 40;
+        return (Math.min(kills, maxKills) / maxKills) * 100;
+    };
+
+    const ctx = document.getElementById('h2hRadarChart').getContext('2d');
+    if (h2hChartInstance) h2hChartInstance.destroy();
+
+    h2hChartInstance = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: ['Avg Kills (Scale 0-40)', 'Map Win %', 'Round Win %', 'Match Win %'],
+            datasets: [
+                {
+                    label: name1,
+                    data: [normalizeKills(p1.kills), p1.maps * 100, p1.rounds * 100, p1.matches * 100],
+                    backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                    borderColor: '#3498db',
+                    pointBackgroundColor: '#3498db',
+                    borderWidth: 3
+                },
+                {
+                    label: name2,
+                    data: [normalizeKills(p2.kills), p2.maps * 100, p2.rounds * 100, p2.matches * 100],
+                    backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                    borderColor: '#e74c3c',
+                    pointBackgroundColor: '#e74c3c',
+                    borderWidth: 3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    suggestedMax: 100,
+                    ticks: { 
+                        display: false // Hiding ticks because the categories have different units
+                    },
+                    grid: { color: 'rgba(0,0,0,0.1)' },
+                    pointLabels: { font: { size: 12, weight: 'bold' }, color: '#2c3e50' }
+                }
+            },
+            plugins: { 
+                legend: { position: 'top', labels: { boxWidth: 20, font: { size: 14 } } },
+                tooltip: {
+                    callbacks: {
+                        // This ensures the tooltip shows the ACTUAL kill count, not the 0-100 normalized value
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            let value = context.raw;
+                            if (context.label === 'Avg Kills (Scale 0-40)') {
+                                // Reverse the normalization for the tooltip display
+                                value = Math.round((value / 100) * 40);
+                            } else {
+                                value = Math.round(value) + '%';
+                            }
+                            return label + ': ' + value;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function showPlayerStats(playerName) {
+    const data = globalHistory[playerName];
+    if (!data) return;
+
+    const photoContainer = document.getElementById('playerPhotoContainer');
+    const photo = document.getElementById('playerPhoto');
+
+    // Update Photo only
+    photo.src = `images/${playerName}.png`;
+    photo.onerror = function() { this.src = 'images/default_avatar.png'; };
+    photoContainer.style.display = 'flex';
+
+    // Show Modal & Charts
+    document.getElementById("modalPlayerName").innerText = playerName + " - Historical Trends";
+    document.getElementById("statsModal").style.display = "block";
+  
+    activeCharts.forEach(c => c.destroy());
+    activeCharts = [];
+
+    const labels = data.map(d => d.date);
+    activeCharts.push(new Chart(document.getElementById('killsChart'), {
+        type: 'line',
+        data: { labels: labels, datasets: [{ label: 'Avg Kills', data: data.map(d => d.kills), borderColor: '#34495e', backgroundColor: 'rgba(52, 73, 94, 0.1)', fill: true, tension: 0.3 }] },
+        options: { responsive: true, maintainAspectRatio: false }
+    }));
+
+    activeCharts.push(new Chart(document.getElementById('mapsChart'), {
+        type: 'line',
+        data: { labels: labels, datasets: [{ label: 'Map Win %', data: data.map(d => d.maps * 100), borderColor: '#e67e22', backgroundColor: 'rgba(230, 126, 34, 0.1)', fill: true, tension: 0.3 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
+    }));
+
+    activeCharts.push(new Chart(document.getElementById('roundsChart'), {
+        type: 'line',
+        data: { labels: labels, datasets: [{ label: 'Round Win %', data: data.map(d => d.rounds * 100), borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)', fill: true, tension: 0.3 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
+    }));
+
+    activeCharts.push(new Chart(document.getElementById('matchesChart'), {
+        type: 'line',
+        data: { labels: labels, datasets: [{ label: 'Match Win %', data: data.map(d => d.matches * 100), borderColor: '#9b59b6', backgroundColor: 'rgba(155, 89, 182, 0.1)', fill: true, tension: 0.3 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
+    }));
+}
+
+fetch("R63 Data.xlsx?v=" + new Date().getTime())
+  .then(res => res.arrayBuffer())
+  .then(data => {
+    const workbook = XLSX.read(data, { type: "array" });
+    const histSheet = workbook.Sheets["Tourney History BA"];
+    let latestExcelDate = 0; // Variable to track the newest date
+
+    if (histSheet) {
+        const histJson = XLSX.utils.sheet_to_json(histSheet);
+        histJson.forEach(row => {
+            const rawDate = row["Date"];
+            
+            // Check if this date is newer than the one we've stored
+            if (rawDate > latestExcelDate) {
+                latestExcelDate = rawDate;
+            }
+
+            const p = row["Player"];
+            if (!globalHistory[p]) globalHistory[p] = [];
+            globalHistory[p].push({
+                date: formatExcelDate(rawDate),
+                kills: row["Overall Avg Kills"] || 0,
+                maps: row["Running Avg. Maps"] || 0,
+                rounds: row["R Avg Rounds"] || 0,
+                matches: row["Running Avg. Matches"] || 0
+            });
+        });
+    }
+
+    // UPDATE THE DATE BADGE IN THE HTML
+    if (latestExcelDate > 0) {
+        const formattedDate = formatDateToLongString(latestExcelDate);
+        $(".date-badge").text(formattedDate);
+    }
+
+    const sheet = workbook.Sheets["Tourney Stats BA"];
+    const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    const headers = json[0];
+    const rows = json.slice(1);
+    const normalizedRows = rows.filter(r => r.length > 0 && r[0] !== undefined && r[0] !== "").map(r => {
+        const row = r.slice(0, headers.length);
+        while (row.length < headers.length) row.push("");
+        return row;
+    });
+
+    headers.forEach(h => {
+      document.querySelector(".header-titles").insertAdjacentHTML("beforeend", `<th>${h}</th>`);
+      document.querySelector(".header-filters").insertAdjacentHTML("beforeend", "<th></th>");
+    });
+
+    const table = $('#dataTable').DataTable({
+      data: normalizedRows,
+      columns: [
+        { data: null, defaultContent: "", className: "index-column", orderable: false, searchable: false },
+        ...headers.map((h, i) => {
+          const cleanHeader = h.replace(/\s+/g, " ").trim().toLowerCase();
+          if (cleanHeader === "player") {
+            return { data: i, render: (data, type) => type === 'display' ? `<span class="player-link" onclick="showPlayerStats('${data}')">${data}</span>` : data };
+          }
+          if (cleanHeader === "avg. kills") {
+            return { data: i, render: (d, t) => (t==='display'||t==='filter') ? (isNaN(Number(d)) ? "" : Math.round(Number(d))) : d };
+          }
+          if (h.includes("%") || cleanHeader.includes("rate") || cleanHeader.includes("accuracy")) {
+            return { data: i, render: (d, t) => (t==='display'||t==='filter') ? (isNaN(Number(d)) ? "" : (Number(d) <= 1 ? Math.round(Number(d)*100) : Math.round(Number(d))) + "%") : d };
+          }
+          return { data: i, defaultContent: "" };
+        })
+      ],
+      scrollX: true, scrollY: "65vh", paging: false, fixedHeader: true, fixedColumns: { left: 2 },
+      columnDefs: [{ targets: 1, width: 160 }],
+      initComplete: function () {
+        const api = this.api();
+        $("#clearFilters").on("click", () => { api.search("").columns().search("").draw(); $(".column-filter").val(""); });
+        api.columns().every(function (colIdx) {
+          if (colIdx === 0 || headers[colIdx - 1] !== "Player") return;
+          const select = $('<select class="column-filter"><option value="">All Players</option></select>')
+            .appendTo($(document.querySelectorAll(".header-filters th")[colIdx]))
+            .on("change", function() { column.search(this.value ? "^"+this.value+"$" : "", true, false).draw(); });
+          this.data().unique().sort().each(d => { if (d) { const clean = String(d).replace(/<[^>]*>?/gm, ''); select.append(`<option value="${clean}">${clean}</option>`); } });
+        });
+      }
+    });
+
+    table.on('draw.dt', function () {
+      table.column(0, { search: 'applied', order: 'applied' }).nodes().each((cell, i) => cell.innerHTML = i + 1);
+    }).draw();
+
+    initH2HOptions();
+  });
+
+window.onclick = (e) => { if (e.target == document.getElementById("statsModal")) closeModal(); }
+</script>
+</body>
+</html>

@@ -41,9 +41,9 @@
 <div id="hotStreakContainer" class="streak-container"></div>
 
 <div class="tabs" style="margin-bottom: 20px;">
-  <a href="index.html"><button class="active-btn">All Time Leaderboard</button></a>
+  <a href="index.html"><button>All Time Leaderboard</button></a>
   <a href="index_v2.html"><button>Season 2</button></a>
-  <a href="index_S3.html"><button>Season 3</button></a>
+  <a href="index_v2.html"><button class="active-btn">Season 3</button></a>
   <a href="OB_tourney_stats.html"><button>Tourney Stats</button></a>
 </div>
 
@@ -98,8 +98,8 @@
   <div class="modal-content">
     <span class="close-btn" onclick="closeModal()">&times;</span>
     <h2 id="modalPlayerName" style="text-align:center; color:#2c3e50; margin-bottom:30px;">Player History</h2>
-
-<div id="playerPhotoContainer">
+    
+    <div id="playerPhotoContainer">
     <img id="playerPhoto" src="" alt="Player Photo">
     </div>
 
@@ -133,31 +133,53 @@
 let globalHistory = {}; 
 let activeCharts = [];
 let h2hChartInstance = null;
-let playerAchievements = {}; 
 
 function closeModal() { document.getElementById("statsModal").style.display = "none"; }
 
 function formatDateToLongString(excelDate) {
+    // Using UTC methods prevents the "one day off" timezone shift
     const d = new Date(Math.round((excelDate - 25569) * 86400 * 1000));
-    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    
+    const months = [
+        "January", "February", "March", "April", "May", "June", 
+        "July", "August", "September", "October", "November", "December"
+    ];
+    
+    // Use getUTCDate() instead of getDate() to ignore local timezone
     const day = d.getUTCDate();
     const month = months[d.getUTCMonth()];
     const year = d.getUTCFullYear();
+    
+    // Determine the suffix (st, nd, rd, or th)
     let suffix = "th";
     if (day % 10 === 1 && day !== 11) suffix = "st";
     else if (day % 10 === 2 && day !== 12) suffix = "nd";
     else if (day % 10 === 3 && day !== 13) suffix = "rd";
+    
     return `${month} ${day}${suffix} ${year}`;
+}
+
+function formatExcelDate(val) {
+    if (typeof val === 'number') {
+        const date = new Date((val - 25569) * 86400 * 1000);
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        const yyyy = date.getFullYear();
+        return `${mm}-${dd}-${yyyy}`;
+    }
+    return val;
 }
 
 function initH2HOptions() {
     const p1Select = document.getElementById('h2hPlayer1');
     const p2Select = document.getElementById('h2hPlayer2');
     const players = Object.keys(globalHistory).sort();
+
     players.forEach(name => {
         p1Select.add(new Option(name, name));
         p2Select.add(new Option(name, name));
     });
+
     if (p2Select.options.length > 1) p2Select.selectedIndex = 1;
     updateH2HChart();
 }
@@ -216,7 +238,7 @@ function updateH2HChart() {
     const p2 = globalHistory[n2][globalHistory[n2].length - 1];
 
     const fixPct = (val) => (val <= 1 ? val * 100 : val);
-    const normKills = (v) => (Math.min(v, 30) / 30) * 100;
+    const normKills = (v) => (Math.min(v, 40) / 40) * 100;
 
     if (h2hChartInstance) h2hChartInstance.destroy();
     
@@ -294,7 +316,7 @@ function updateH2HChart() {
                             let label = context.dataset.label || '';
                             let value = context.raw;
                             if (context.dataIndex === 0) {
-                                let realKills = (value / 100) * 30;
+                                let realKills = (value / 100) * 40;
                                 return label + ": " + realKills.toFixed(1) + " Kills";
                             } else {
                                 return label + ": " + Math.round(value) + "%";
@@ -307,11 +329,13 @@ function updateH2HChart() {
     });
 }
 
+
+
 fetch("R63 Data.xlsx?v=" + new Date().getTime())
   .then(res => res.arrayBuffer())
   .then(data => {
     const workbook = XLSX.read(data, { type: "array" });
-    const histSheet = workbook.Sheets["OB History"];
+    const histSheet = workbook.Sheets["OB History S3"];
     let latestExcelDate = 0;
 
     if (histSheet) {
@@ -321,48 +345,119 @@ fetch("R63 Data.xlsx?v=" + new Date().getTime())
             const p = row["Player"];
             if (!globalHistory[p]) globalHistory[p] = [];
             globalHistory[p].push({ 
-                rawDate: rawDate, date: formatDateToLongString(rawDate), 
-                kills: row["Overall Avg Kills"] || 0, singleKills: row["Kills"] || 0,
-                maps: row["Running Avg. Maps"] || 0, rounds: row["R Avg Rounds"] || 0, 
-                matches: row["Running Avg. Matches"] || 0 
-            });
+  rawDate: rawDate, 
+    date: formatDateToLongString(rawDate), 
+    kills: row["Overall Avg Kills"] || 0, 
+    singleKills: row["Kills"] || 0,
+    maps: row["Running Avg. Maps"] || 0, 
+    rounds: row["R Avg Rounds"] || 0, 
+    // Ensure this matches the EXACT header in your "OB History" sheet
+    matches: row["Running Avg. Matches"] || 0,
+    matchResult: row["Match Result"] || 0
+});
         });
     }
 
     if (latestExcelDate > 0) $(".date-badge").text(formatDateToLongString(latestExcelDate));
 
-    // Hot Streaks Logic
-    const fourteenDaysAgo = latestExcelDate - 14;
-    let streaks = { topK: { p: "None", v: 0 }, impK: { p: "None", v: -99 }, active: { p: "None", v: 0 }, clutch: { p: "None", v: 0 } };
+// --- Corrected Hot Streaks Logic: Strict 14-Day 3-Match Minimum ---
+const fourteenDaysAgo = latestExcelDate - 14;
+const WINDOW_MIN_MATCHES = 3; // Specifically for the last 14 days
 
-    Object.keys(globalHistory).forEach(name => {
-        const fullHistory = globalHistory[name];
-        const recentMatches = fullHistory.filter(h => h.rawDate >= fourteenDaysAgo);
-        if (recentMatches.length > 0) {
-            recentMatches.forEach(match => { if (match.singleKills > streaks.topK.v) streaks.topK = { p: name, v: match.singleKills }; });
-            if (recentMatches.length > streaks.active.v) streaks.active = { p: name, v: recentMatches.length };
-            if (recentMatches.length >= 3) {
-                const currentAvg = recentMatches[recentMatches.length - 1].kills;
-                const priorHistory = fullHistory.filter(h => h.rawDate < fourteenDaysAgo);
-                const baselineAvg = priorHistory.length > 0 ? priorHistory[priorHistory.length - 1].kills : fullHistory[0].kills;
-                const surgeValue = currentAvg - baselineAvg;
-                if (surgeValue > streaks.impK.v) streaks.impK = { p: name, v: surgeValue };
-                const winPctValue = recentMatches[recentMatches.length - 1].matches <= 1 ? recentMatches[recentMatches.length - 1].matches * 100 : recentMatches[recentMatches.length - 1].matches;
-                if (winPctValue > streaks.clutch.v) streaks.clutch = { p: name, v: winPctValue };
+let streaks = { 
+    topK: { p: "None", v: 0 }, 
+    impK: { p: "None", v: -99 },
+    active: { p: "None", v: 0 },
+    winS: { p: "None", v: 0 }
+};
+
+Object.keys(globalHistory).forEach(name => {
+    const fullHistory = globalHistory[name];
+    // Filter for matches ONLY within the last 14 days
+    const recentMatches = fullHistory.filter(h => h.rawDate >= fourteenDaysAgo);
+    
+    // Only proceed if they are active (at least 1 game in 14 days)
+    if (recentMatches.length > 0) {
+        
+        // 1. High Game (Single best performance, no minimum games required)
+        recentMatches.forEach(match => {
+            if (match.singleKills > streaks.topK.v) {
+                streaks.topK = { p: name, v: match.singleKills };
+            }
+        });
+
+        // 2. Most Active (Workhorse)
+        if (recentMatches.length > streaks.active.v) {
+            streaks.active = { p: name, v: recentMatches.length };
+        }
+
+        // --- STRICT 3-MATCH MINIMUM FOR AVERAGES ---
+        if (recentMatches.length >= WINDOW_MIN_MATCHES) {
+            
+            // 3. Kill Surge Calculation
+            const currentAvg = recentMatches[recentMatches.length - 1].kills;
+            const priorHistory = fullHistory.filter(h => h.rawDate < fourteenDaysAgo);
+            // Baseline is the career average right before this 14-day window started
+            const baselineAvg = priorHistory.length > 0 
+                ? priorHistory[priorHistory.length - 1].kills 
+                : fullHistory[0].kills;
+            
+            const surgeValue = currentAvg - baselineAvg;
+            if (surgeValue > streaks.impK.v) {
+                streaks.impK = { p: name, v: surgeValue };
+            }
+
+// 4. Current Win Streak (Consecutive wins counting back from newest match)
+            let currentWinStreak = 0;
+            
+            // Sort recent matches so the newest match is evaluated first
+            const sortedRecent = [...recentMatches].sort((a, b) => b.rawDate - a.rawDate);
+
+            for (let match of sortedRecent) {
+                if (parseInt(match.matchResult) === 1) {
+                    currentWinStreak++;
+                } else {
+                    break; // Streak broken, stop counting
+                }
+            }
+            
+            if (currentWinStreak > streaks.winS.v) {
+                streaks.winS = { p: name, v: currentWinStreak };
             }
         }
-    });
+    }
+});
 
-    $("#hotStreakContainer").html(`
-        <h3 class="streak-main-title">🔥 14 Day Streaks</h3>
-        <div class="streak-card" style="border-left-color: #f1c40f;"><div class="streak-title">🔥 Highest Game</div><div class="streak-player">${streaks.topK.p}</div><div class="streak-stat">${streaks.topK.v} Kills</div></div>
-        <div class="streak-card" style="border-left-color: #e74c3c;"><div class="streak-title">📈 Most Improved</div><div class="streak-player">${streaks.impK.p}</div><div class="streak-stat">${streaks.impK.v > 0 ? '+' : ''}${streaks.impK.v.toFixed(2)} Avg</div></div>
-        <div class="streak-card" style="border-left-color: #2ecc71;"><div class="streak-title">🎮 Most Active</div><div class="streak-player">${streaks.active.p}</div><div class="streak-stat">${streaks.active.v} Matches</div></div>
-        <div class="streak-card" style="border-left-color: #9b59b6;"><div class="streak-title">💎 Clutch Factor</div><div class="streak-player">${streaks.clutch.p}</div><div class="streak-stat">${Math.round(streaks.clutch.v)}% Win Rate</div></div>
-    `);
+// Update the UI with specific colors
+$("#hotStreakContainer").html(`
+<h3 class="streak-main-title">🔥 14 Day Streaks</h3>
+    <div class="streak-card" style="border-left-color: #f1c40f;">
+        <div class="streak-title">🎯 Highest Single Game Kills</div>
+        <div class="streak-player">${streaks.topK.p}</div>
+        <div class="streak-stat">${streaks.topK.v} Kills</div>
+    </div>
+
+    <div class="streak-card" style="border-left-color: #e74c3c;">
+        <div class="streak-title">📈 Most Improved Avg. Kills</div>
+        <div class="streak-player">${streaks.impK.p}</div>
+        <div class="streak-stat">${streaks.impK.v > 0 ? '+' : ''}${streaks.impK.v.toFixed(2)} Avg</div>
+    </div>
+
+    <div class="streak-card" style="border-left-color: #2ecc71;">
+        <div class="streak-title">🎮 Most Active Player</div>
+        <div class="streak-player">${streaks.active.p}</div>
+        <div class="streak-stat">${streaks.active.v} Matches</div>
+    </div>
+
+<div class="streak-card" style="border-left-color: #9b59b6;">
+        <div class="streak-title">🔥 Current Win Streak</div>
+        <div class="streak-player">${streaks.winS.p}</div>
+        <div class="streak-stat">${streaks.winS.v} Games</div>
+    </div>
+`);
 
     // Process Table
-    const sheet = workbook.Sheets["Old Bow v2"];
+    const sheet = workbook.Sheets["OB Season 3"];
     const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
     const headers = json[0];
     const rows = json.slice(1).filter(r => r[0]);
@@ -373,49 +468,39 @@ fetch("R63 Data.xlsx?v=" + new Date().getTime())
 
     const descIdx = headers.findIndex(h => h && h.toLowerCase().includes("description"));
 
-$('#dataTable').DataTable({
+    $('#dataTable').DataTable({
       data: rows,
       columns: [
         { data: null, defaultContent: "", className: "index-column" },
         ...headers.map((h, i) => {
           const clean = h.toLowerCase();
-          
-          // Hide description column entirely
-          if (clean.includes("description")) return { data: i, visible: false };
-          
-          // Render Player links
-          if (clean === "player") return { data: i, render: (d) => `<span class="player-link" onclick="showPlayerStats('${d}')">${d}</span>` };
-          
-          // Render 4, 5, 6, 7 pieces
+if (clean.includes("description")) return { data: i, visible: false };
+if (clean === "player") return { data: i, render: (d) => `<span class="player-link" onclick="showPlayerStats('${d}')">${d}</span>` };
+
+// ADD THIS SECTION FOR THE NEW PIECE COLUMNS
 if (clean === "4 piece" || clean === "5 piece" || clean === "6 piece" || clean === "7 piece") {
     return { 
         data: i, 
         render: (d) => d ? d : 0 // Displays 0 if the Excel cell is empty
     };
 }
-          
-          // Render Avg Kills
+          if (clean.includes("description")) return { data: i, visible: false };
+          if (clean === "player") return { data: i, render: (d) => `<span class="player-link" onclick="showPlayerStats('${d}')">${d}</span>` };
           if (clean === "avg. kills") return { data: i, render: (d) => isNaN(parseFloat(d)) ? d : Math.round(parseFloat(d)) };
-
-          // MODIFIED: Render trophies/mvps without the tooltip span
           if (clean === "trophies" || clean === "mvps") {
-            return { 
-                data: i, 
-                render: (d) => d ? d : "" 
-            };
+            return { data: i, render: (d, type, row) => {
+                if (type === 'display' && d) {
+                    let tip = (descIdx !== -1 && row[descIdx]) ? row[descIdx] : "Achievement";
+                    return `<span title="${tip}" style="cursor:help; border-bottom:1px dotted #ccc;">${d}</span>`;
+                }
+                return d;
+            }};
           }
-
-          // Render Percentages
-          if (h.includes("%") || clean.includes("rate")) {
-            return { data: i, render: (d) => isNaN(d) ? d : (d <= 1 ? Math.round(d*100) : Math.round(d)) + "%" };
-          }
-
+          if (h.includes("%") || clean.includes("rate")) return { data: i, render: (d) => isNaN(d) ? d : (d <= 1 ? Math.round(d*100) : Math.round(d)) + "%" };
           return { data: i, defaultContent: "" };
         })
       ],
-      paging: false, 
-      scrollX: true, 
-      fixedHeader: true,
+      paging: false, scrollX: true, fixedHeader: true,
       initComplete: function () {
         this.api().columns().every(function (colIdx) {
             if (colIdx === 0 || !this.visible()) return;

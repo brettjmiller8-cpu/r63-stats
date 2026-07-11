@@ -41,10 +41,10 @@
 <div id="hotStreakContainer" class="streak-container"></div>
 
 <div class="tabs" style="margin-bottom: 20px;">
-  <a href="BA.html"><button class="active-btn">All Time Leaderboard</button></a>
+  <a href="BA.html"><button>All Time Leaderboard</button></a>
   <a href="BA_v2.html"><button>Season 2</button></a>
-  <a href="BA_S3.html"><button>Season 3</button></a>
-  <a href="BA_tourney_stats.html"><button>Tourney Stats</button></a>
+  <a href="BA_S3.html"><button class="active-btn">Season 3</button></a>
+   <a href="BA_tourney_stats.html"><button>Tourney Stats</button></a>
 </div>
 <div class="comments-container" style="border-top: 5px solid #3498db;">
   <h3>⚔️ Black Arrow Head-to-Head Comparison</h3>
@@ -89,11 +89,7 @@
 <div class="comments-container">
   <h3>📝 General Match Comments</h3>
   <div id="matchComments">
-    *2/22/26 match not included, Tony fell asleep<br>
-    *2/28/26 match did not have kills for both teams<br>
-    *3/2/26 match no kills for Focus, Choi, Broken, Tail, Kyle, Hopes, FlyinRyan<br>
-    *3/5/26 match #2 DNF, stats not included <br>
-    *3/28/26 Team 2 kills not included, match data incomplete<br>
+   None
   </div>
 </div>
 
@@ -324,7 +320,7 @@ fetch("R63 Data.xlsx?v=" + new Date().getTime())
   .then(res => res.arrayBuffer())
   .then(data => {
     const workbook = XLSX.read(data, { type: "array" });
-    const histSheet = workbook.Sheets["BA History"];
+    const histSheet = workbook.Sheets["BA History S3"];
     let latestExcelDate = 0;
 
     if (histSheet) {
@@ -341,7 +337,8 @@ fetch("R63 Data.xlsx?v=" + new Date().getTime())
     maps: row["Running Avg. Maps"] || 0, 
     rounds: row["R Avg Rounds"] || 0, 
     // Ensure this matches the EXACT header in your "BA History" sheet
-    matches: row["Running Avg. Matches"] || 0 
+    matches: row["Running Avg. Matches"] || 0,
+    matchResult: row["Match Result"] || 0
 });
         });
     }
@@ -356,7 +353,7 @@ let streaks = {
     topK: { p: "None", v: 0 }, 
     impK: { p: "None", v: -99 },
     active: { p: "None", v: 0 },
-    clutch: { p: "None", v: 0 } 
+    winS: { p: "None", v: 0 }
 };
 
 Object.keys(globalHistory).forEach(name => {
@@ -395,12 +392,22 @@ Object.keys(globalHistory).forEach(name => {
                 streaks.impK = { p: name, v: surgeValue };
             }
 
-            // 4. Clutch Factor (Highest Match Win % in current window)
-            const latestWinPctRaw = recentMatches[recentMatches.length - 1].matches;
-            const winPctValue = latestWinPctRaw <= 1 ? latestWinPctRaw * 100 : latestWinPctRaw;
+// 4. Current Win Streak (Consecutive wins counting back from newest match)
+            let currentWinStreak = 0;
             
-            if (winPctValue > streaks.clutch.v) {
-                streaks.clutch = { p: name, v: winPctValue };
+            // Sort recent matches so the newest match is evaluated first
+            const sortedRecent = [...recentMatches].sort((a, b) => b.rawDate - a.rawDate);
+
+            for (let match of sortedRecent) {
+                if (parseInt(match.matchResult) === 1) {
+                    currentWinStreak++;
+                } else {
+                    break; // Streak broken, stop counting
+                }
+            }
+            
+            if (currentWinStreak > streaks.winS.v) {
+                streaks.winS = { p: name, v: currentWinStreak };
             }
         }
     }
@@ -410,7 +417,7 @@ Object.keys(globalHistory).forEach(name => {
 $("#hotStreakContainer").html(`
 <h3 class="streak-main-title">🔥 14 Day Streaks</h3>
     <div class="streak-card" style="border-left-color: #f1c40f;">
-        <div class="streak-title">🔥 Highest Single Game Kills</div>
+        <div class="streak-title">🎯 Highest Single Game Kills</div>
         <div class="streak-player">${streaks.topK.p}</div>
         <div class="streak-stat">${streaks.topK.v} Kills</div>
     </div>
@@ -427,15 +434,15 @@ $("#hotStreakContainer").html(`
         <div class="streak-stat">${streaks.active.v} Matches</div>
     </div>
 
-    <div class="streak-card" style="border-left-color: #9b59b6;">
-        <div class="streak-title">💎 Clutch Factor (Highest Win %)</div>
-        <div class="streak-player">${streaks.clutch.p}</div>
-        <div class="streak-stat">${Math.round(streaks.clutch.v)}% Win Rate</div>
+<div class="streak-card" style="border-left-color: #9b59b6;">
+        <div class="streak-title">🔥 Current Win Streak</div>
+        <div class="streak-player">${streaks.winS.p}</div>
+        <div class="streak-stat">${streaks.winS.v} Games</div>
     </div>
 `);
 
     // Process Table
-    const sheet = workbook.Sheets["BA v2"];
+    const sheet = workbook.Sheets["BA S3"];
     const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
     const headers = json[0];
     const rows = json.slice(1).filter(r => r[0]);
@@ -451,7 +458,7 @@ $("#hotStreakContainer").html(`
       columns: [
         { data: null, defaultContent: "", className: "index-column" },
         ...headers.map((h, i) => {
-         const clean = h.toLowerCase();
+                   const clean = h.toLowerCase();
 if (clean.includes("description")) return { data: i, visible: false };
 if (clean === "player") return { data: i, render: (d) => `<span class="player-link" onclick="showPlayerStats('${d}')">${d}</span>` };
 
